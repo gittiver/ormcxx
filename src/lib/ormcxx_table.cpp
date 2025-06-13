@@ -8,7 +8,7 @@ namespace ormcxx {
   std::vector<std::string> sql_table_definition::primary_keys() const {
     std::vector<std::string> result;
     for (const auto& column : columns) {
-      if (column.is_primary==ormcxx::ePRIMARY_KEY::PRIMARY_KEY) {
+      if (column.is_primary==ePRIMARY_KEY::PRIMARY_KEY) {
         result.push_back(column.name);
       }
     }
@@ -27,7 +27,7 @@ namespace ormcxx {
       }
       ddl.append(column.name).append(" ")
          .append(column.type.name)
-         .append(column.nullable==ormcxx::Nullable::NOT_NULL ? " NOT NULL":"");
+         .append(column.nullable==Nullable::NOT_NULL ? " NOT NULL":"");
     }
     ddl.append(", PRIMARY KEY(");
 
@@ -39,7 +39,7 @@ namespace ormcxx {
       } else {
         ddl.append(",");
       }
-    };
+    }
     ddl.append(")");
     ddl.append(")");
     return ddl;

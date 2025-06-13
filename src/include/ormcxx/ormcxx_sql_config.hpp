@@ -7,6 +7,7 @@
 
 #include<ormcxx/ormcxx_table.hpp>
 #include<ormcxx/ormcxx_fieldmap.hpp>
+#include <typeinfo>
 
 namespace ormcxx {
 
@@ -15,36 +16,44 @@ namespace ormcxx {
     static sql_table_definition table_definition;
     //static std::vector<AccessWrapper<ClassType>> field_map;
   public:
-    static void table_name(const std::string &table_name) { sql_config<ClassType>::table_definition.name = table_name; }
-    static const std::string &table_name() { return sql_config<ClassType>::table_definition.name; }
-    static const sql_table_definition &table() { return sql_config<ClassType>::table_definition; }
-    static std::string to_ddl() { return sql_config<ClassType>::table_definition.to_ddl(); }
+    static void table_name(const std::string &table_name) { table_definition.name = table_name; }
+    static const std::string &table_name() { return table_definition.name; }
+    static const sql_table_definition &table() { return table_definition; }
+    static std::string to_ddl() { return table_definition.to_ddl(); }
+
+    static std::string sql_type(const std::type_info& info) {
+      if (info ==typeid(std::string)) {
+        return "VARCHAR";
+      } else if (info ==typeid(int)) {
+        return "INTEGER";
+      } else {
+        return "";
+      }
+    }
 
     template<typename AttributeType>
     static void setPrimaryField(const std::string &columnName, AttributeType attribute) {
-      //SALSABIL_LOG_DEBUG("Setting primary field (attribute): " + columnName);
-      //using FieldType = typename Utility::Traits<AttributeType>::AttributeType;
-      //mPrimaryFieldList.push_back(new SqlFieldImpl<ClassType, FieldType>(columnName, fieldColumnIndex(columnName), new AccessWrapperAttributeImpl<ClassType, FieldType, AttributeType>(attribute)));
+      using FieldType = typename Traits<AttributeType>::AttributeType;
+      AccessWrapperAttributeImpl<ClassType,FieldType,AttributeType> a(attribute);
 
-      sql_column_definition column{
+      const sql_column_definition column{
         columnName,
-        {typeid(typename Traits<AttributeType>::AttributeType).name()},
+        {sql_type(typeid(FieldType))},
         Nullable::NOT_NULL,
         ePRIMARY_KEY::PRIMARY_KEY
       };
       table_definition.columns.push_back(column);
     }
 
+
     template<typename AttributeType>
     static void setField(const std::string &columnName,
                          AttributeType attribute,
-                         Nullable nullable = Nullable::NULLABLE) {
-      //SALSABIL_LOG_DEBUG("Setting field (attribute): " + columnName);
-      //using FieldType = typename Traits<AttributeType>::AttributeType;
-      //mFieldList.push_back(new SqlFieldImpl<ClassType, FieldType>(columnName, fieldColumnIndex(columnName), new AccessWrapperAttributeImpl<ClassType, FieldType, AttributeType>(attribute)));
-      sql_column_definition column{
+                         const Nullable nullable = Nullable::NULLABLE) {
+      using FieldType = typename Traits<AttributeType>::AttributeType;
+      const sql_column_definition column{
         columnName,
-        {typeid(typename Traits<AttributeType>::AttributeType).name()},
+        { sql_type(typeid(FieldType))},
         nullable,
         ePRIMARY_KEY::NO_PRIMARY_KEY
       };

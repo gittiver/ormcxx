@@ -54,8 +54,6 @@ TEST_CASE("sql_config_table_map")
 
   REQUIRE(sql_config<C>::table().primary_keys()==std::vector<std::string>({"id"}));
 
-  cout << sql_config<C>::to_ddl() << endl;
-
-  CHECK(false);
+  REQUIRE(sql_config<C>::to_ddl()=="CREATE TABLE (id INTEGER NOT NULL, name VARCHAR, PRIMARY KEY(id))");
 
 }

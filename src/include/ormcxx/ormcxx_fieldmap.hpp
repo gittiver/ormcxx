@@ -43,6 +43,7 @@ namespace ormcxx {
   template<class ClassType, typename FieldType>
   class AccessWrapper {
   public:
+    virtual ~AccessWrapper()=default;
     virtual void get(const ClassType *, FieldType *) = 0;
 
     virtual void set(ClassType *, FieldType *) = 0;

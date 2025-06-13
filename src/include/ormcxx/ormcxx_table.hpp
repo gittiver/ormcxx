@@ -40,7 +40,7 @@ namespace ormcxx {
     std::vector<index_definition> indices;
 
   public:
-    sql_table_definition(const std::string &name = "") : name(name) {
+    explicit sql_table_definition(const std::string &name = "") : name(name) {
     }
 
     std::string name;
