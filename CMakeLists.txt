@@ -28,14 +28,20 @@ CPMAddPackage(expected
   "EXPECTED_BUILD_TESTS Off"
 )
 
+CPMAddPackage(sqlite3
+GIT_TAG master
+GITHUB_REPOSITORY gittiver/sqlite3-amalgamation
+)
+
 # lib
 add_library(${PROJECT_NAME}
+        src/include/ormcxx/ormcxx_sql_config.hpp src/lib/ormcxx_sql_config.cpp
         src/lib/ormcxx_table.cpp src/include/ormcxx/ormcxx_table.hpp
-)
+ "src/lib/ormcxx_db.cpp")
 target_include_directories(
         ${PROJECT_NAME}
         PUBLIC ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include)
-target_link_libraries(${PROJECT_NAME} PUBLIC tl::expected)
+target_link_libraries(${PROJECT_NAME} PUBLIC tl::expected sqlite3)
 
 # main executable
 add_executable(${PROJECT_NAME}_main src/main.cpp)

@@ -31,3 +31,5 @@
 *.out
 *.app
 .idea
+/.vs
+/out/build/x64-Debug

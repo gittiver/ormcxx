@@ -10,6 +10,16 @@
 #include <typeinfo>
 
 namespace ormcxx {
+    std::string sql_type(const std::type_info& info);  /*{
+      if (info ==typeid(std::string)) {
+        return "VARCHAR";
+      } else if (info ==typeid(int)) {
+        return "INTEGER";
+      } else {
+        return "";
+      }
+    }*/
+
 
   template<class ClassType>
   class sql_config {
@@ -20,17 +30,7 @@ namespace ormcxx {
     static const std::string &table_name() { return table_definition.name; }
     static const sql_table_definition &table() { return table_definition; }
     static std::string to_ddl() { return table_definition.to_ddl(); }
-
-    static std::string sql_type(const std::type_info& info) {
-      if (info ==typeid(std::string)) {
-        return "VARCHAR";
-      } else if (info ==typeid(int)) {
-        return "INTEGER";
-      } else {
-        return "";
-      }
-    }
-
+        
     template<typename AttributeType>
     static void setPrimaryField(const std::string &columnName, AttributeType attribute) {
       using FieldType = typename Traits<AttributeType>::AttributeType;
