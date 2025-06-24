@@ -18,10 +18,11 @@ namespace ormcxx {
         };
         enum class BackendType {
             SQLITE,
-            ODBC,
-            MARIA_DB,
-            POSTGRESQL
+        //    ODBC,
+        //    MARIA_DB,
+        //    POSTGRESQL
         };
+
 
         /** closes database */
         virtual ~Database()=default;

@@ -5,8 +5,8 @@
 #ifndef ORMCXX_FIELDMAP_H
 #define ORMCXX_FIELDMAP_H
 
-#include<string>
-#include<vector>
+#include <memory>
+#include <iostream>
 
 namespace ormcxx {
 
@@ -29,15 +29,6 @@ namespace ormcxx {
   };
 
 
-  template<typename ClassType>
-  class SqlField {
-  public:
-  };
-
-  template<typename ClassType, typename FieldType>
-  class SqlFieldImpl : SqlField<ClassType> {
-  public:
-  };
 
 
   template<class ClassType, typename FieldType>
@@ -54,7 +45,7 @@ namespace ormcxx {
     AttributeType mAttributePtr;
 
   public:
-    AccessWrapperAttributeImpl(AttributeType attribute) : mAttributePtr(attribute) {
+    explicit AccessWrapperAttributeImpl(AttributeType attribute) : mAttributePtr(attribute) {
     }
 
     virtual void get(const ClassType *classInstance, FieldType *fieldInstance) {
@@ -64,6 +55,27 @@ namespace ormcxx {
     virtual void set(ClassType *classInstance, FieldType *fieldInstance) {
       classInstance->*mAttributePtr = *fieldInstance;
     }
+  };
+
+  template<typename ClassType>
+  class SqlField {
+  public:
+    /* Reads the data at the corresponding column from <i>driver</i> and inject it in <i>instance</i> using its setter method. */
+    virtual void readFromDriver(ClassType* instance, int column) = 0;
+
+  };
+
+  template<typename ClassType, typename FieldType>
+  class SqlFieldImpl : public SqlField<ClassType> {
+  public:
+    std::unique_ptr<AccessWrapper<ClassType, FieldType>> mAccessWrapper;
+    void readFromDriver(ClassType* instance, int columnIndex) {
+      FieldType t;
+      std::cout << "read " << typeid(instance).name() << ":" << columnIndex << std::endl;
+      //Utility::driverToVariable(SqlEntityConfigurer<ClassType>::driver(), columnIndex, Utility::initializeInstance(&t));
+      mAccessWrapper->set(instance, &t);
+    }
+
   };
 
 

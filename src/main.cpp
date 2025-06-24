@@ -21,6 +21,14 @@ void do_sql_config() {
   sql_config<C>::setField("name",&C::name);
 
   cout << sql_config<C>::to_ddl() << endl;
+  cout << sql_config<C>::field_mapping().size() << endl;
+
+  for (size_t i=0; i < sql_config<C>::field_mapping().size();++i) {
+    auto entry = sql_config<C>::field_mapping().at(i);
+    cout << typeid(entry).name() << endl;
+    C c;
+    entry->readFromDriver(&c,i);
+  }
 
 }
 

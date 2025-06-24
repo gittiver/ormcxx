@@ -35,8 +35,8 @@ TEST_CASE("sql_config_table_map")
     std::string name;
   };
 
-  REQUIRE(sql_config<C>::table_name()=="");
-  REQUIRE(sql_config<C>::table().columns.size()==0);
+  REQUIRE(sql_config<C>::table_name().empty());
+  REQUIRE(sql_config<C>::table().columns.empty());
 
   sql_config<C>::table_name("C");
 

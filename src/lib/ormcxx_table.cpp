@@ -19,7 +19,7 @@ namespace ormcxx {
 
     std::string ddl = "CREATE TABLE (";
     bool first = true;
-    for (const auto column: columns ) {
+    for (const auto &column: columns ) {
       if (first) {
         first = false;
       } else {
