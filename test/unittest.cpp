@@ -1,5 +1,3 @@
-#define CROW_ENABLE_DEBUG
-#define CROW_LOG_LEVEL 0
 #include <sys/stat.h>
 
 #include <iostream>
@@ -10,12 +8,14 @@
 #include <regex>
 
 #include "catch2/catch_all.hpp"
+
 #include "ormcxx/ormcxx_sql_config.hpp"
 using namespace std;
 
 
-TEST_CASE("sql_table_definition")
+TEST_CASE("db_driver")
 {
+
   using ormcxx::sql_table_definition;
   const std::string expected_result = "CREATE TABLE (id int, name1 type1 NOT NULL, PRIMARY KEY(id))";
 

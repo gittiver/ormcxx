@@ -37,7 +37,8 @@ GITHUB_REPOSITORY gittiver/sqlite3-amalgamation
 add_library(${PROJECT_NAME}
         src/include/ormcxx/ormcxx_sql_config.hpp src/lib/ormcxx_sql_config.cpp
         src/lib/ormcxx_table.cpp src/include/ormcxx/ormcxx_table.hpp
- "src/lib/ormcxx_db.cpp")
+        src/lib/ormcxx_sqlite.hpp src/lib/ormcxx_sqlite.cpp
+        src/lib/ormcxx_db.cpp)
 target_include_directories(
         ${PROJECT_NAME}
         PUBLIC ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include)

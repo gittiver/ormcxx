@@ -2,19 +2,24 @@
 #include "ormcxx_sqlite.hpp"
 
 namespace ormcxx {
+    expected<sql_result *, sql_stmt::error> sql_stmt::execute(const std::string &sql_string) {
+        error r = prepare(sql_string);
+        return execute();
+    }
+
     tl::expected<Database*, Database::Error> Database::open(BackendType backendType, const std::string& connInfo)
     {
-        DbDriver* driver = nullptr;
+        Database* db = nullptr;
         switch (backendType) {
-        case BackendType::SQLITE:
-            driver = new SQLiteDriver();
+            case BackendType::SQLITE:
+            db = Sqlite3Db::open(connInfo).value_or(nullptr);
             break;
         default:
             break;
         }
-        if (!driver)
+        if (!db)
             return tl::make_unexpected(Error::NO_DB_DRIVER);
         else
-            return driver->open(connInfo);
+            return db;
     }
 }
