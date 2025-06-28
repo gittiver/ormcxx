@@ -2,8 +2,9 @@
 #include "ormcxx_sqlite.hpp"
 
 namespace ormcxx {
-    expected<sql_result *, sql_stmt::error> sql_stmt::execute(const std::string &sql_string) {
-        error r = prepare(sql_string);
+    expected<sql_result *, sql_error> sql_stmt::execute(const std::string &sql_string) {
+        sql_error r = prepare(sql_string);
+        /// TBD check result of prepare before execute
         return execute();
     }
 
@@ -18,7 +19,7 @@ namespace ormcxx {
             break;
         }
         if (!db)
-            return tl::make_unexpected(Error::NO_DB_DRIVER);
+            return make_unexpected(Error::NO_DB_DRIVER);
         else
             return db;
     }

@@ -3,6 +3,8 @@
 
 namespace ormcxx {
 
+  static sql_error int2error(int error);
+
   Sqlite3Db::~Sqlite3Db() {
     close();
   }
@@ -26,23 +28,12 @@ namespace ormcxx {
     return Error::OK;
   }
 
-  // expected<sql_stmt*,sql_result::Error> Sqlite3Db::prepare(const std::string &sql_string) {
-  //   sql_stmt* s = new Sqlite3Stmt(this,sql_string);
-  //   return s;
-  // }
-  //  sql_stmt::error Sqlite3Stmt::prepare(const std::string &sql_string) {
-  //   sqlite3_prepare_v2()
-  //
-  //   Sqlite3Stmt stmt(hDb, sql_string);
-  //   return stmt;
-  // }
-
-  expected<sql_stmt *, sql_stmt::error> Sqlite3Db::query(const std::string &sql_string) {
+  expected<sql_stmt *, sql_error> Sqlite3Db::query(const std::string &sql_string) {
     Sqlite3Stmt* stmt =new Sqlite3Stmt(hDb);
     auto error = stmt->prepare(sql_string);
-    if (error!=sql_stmt::error::OK) {
+    if (error!=sql_error::OK) {
       delete stmt;
-      return tl::make_unexpected(error);
+      return make_unexpected(error);
     } else {
       return stmt;
     }
@@ -51,30 +42,39 @@ namespace ormcxx {
   Sqlite3Stmt::Sqlite3Stmt(sqlite3 *db)
   : db_(db),
   prepare_rc(SQLITE_ERROR),
+  exec_rc_(SQLITE_ERROR),
   result(this),
   bindings_(this) {}
 
   Sqlite3Stmt::~Sqlite3Stmt() { sqlite3_finalize(stmt); }
 
-  sql_stmt::error Sqlite3Stmt::prepare(const std::string &sql_string) {
+
+  sql_error Sqlite3Stmt::prepare(const std::string &sql_string) {
     prepare_rc = sqlite3_prepare_v2(db_, sql_string.data(), sql_string.length(), &stmt, nullptr);
-    return sql_stmt::error::OK;
+    return int2error(prepare_rc);
   }
 
-  tl::expected<sql_result *, sql_stmt::error> Sqlite3Stmt::execute() {
+  expected<sql_result*, sql_error> Sqlite3Stmt::execute() {
     if (prepare_rc != SQLITE_OK) {
-      return tl::make_unexpected(sql_stmt::error::NOK);
+      return make_unexpected(int2error(prepare_rc));
     } else {
+      exec_rc_ = sqlite3_step(stmt);
+      switch (exec_rc_) {
+        case SQLITE_ROW: break;
+        case SQLITE_DONE: break;
+        case SQLITE_OK: break;
+        default: return make_unexpected(int2error(exec_rc_));
+      }
       return &result;
     }
   }
 
 
-  static sql_bindings::Error int2error(int error) {
+  static sql_error int2error(int error) {
     switch (error) {
-      case SQLITE_OK: return sql_bindings::Error::OK;
+      case SQLITE_OK: return sql_error::OK;
         break;
-      default: return sql_bindings::Error::NOK;
+      default: return sql_error::NOK;
         break;
     }
   }
@@ -85,6 +85,11 @@ namespace ormcxx {
     return sqlite3_column_count(stmt_->stmt);
   }
 
+  template<>
+  std::string sql_result_impl<Sqlite3Stmt>::column_name(size_t iCol) {
+    const char* pszName = sqlite3_column_name(stmt_->stmt, iCol);
+    return pszName ? std::string(pszName) : std::string();
+  }
   template<>
   const void* sql_result_impl<Sqlite3Stmt>::column_blob(size_t iCol) {
     return sqlite3_column_blob(stmt_->stmt, iCol);
@@ -142,37 +147,37 @@ namespace ormcxx {
     return sqlite3_bind_parameter_name(stmt_->stmt, index);
   }
   template<>
-  sql_bindings::Error sql_bindings_impl<Sqlite3Stmt>::bind_blob(size_t index, const void *pBlob, int n) {
+  sql_error sql_bindings_impl<Sqlite3Stmt>::bind_blob(size_t index, const void *pBlob, int n) {
     return int2error(sqlite3_bind_blob(stmt_->stmt, index, pBlob, n, nullptr));
   }
 
   template<>
-  sql_bindings::Error sql_bindings_impl<Sqlite3Stmt>::bind_double(size_t index, double value) {
+  sql_error sql_bindings_impl<Sqlite3Stmt>::bind_double(size_t index, double value) {
     return int2error(sqlite3_bind_double(stmt_->stmt, index, value));
   }
 
   template<>
-  sql_bindings::Error sql_bindings_impl<Sqlite3Stmt>::bind_int(size_t index, int value) {
+  sql_error sql_bindings_impl<Sqlite3Stmt>::bind_int(size_t index, int value) {
     return int2error(sqlite3_bind_int(stmt_->stmt, index, value));
   }
 
   template<>
-  sql_bindings::Error sql_bindings_impl<Sqlite3Stmt>::bind_int64(size_t index, int64_t value) {
+  sql_error sql_bindings_impl<Sqlite3Stmt>::bind_int64(size_t index, int64_t value) {
     return int2error(sqlite3_bind_int64(stmt_->stmt, index, value));
   }
 
   template<>
-  sql_bindings::Error sql_bindings_impl<Sqlite3Stmt>::bind_null(size_t index) {
+  sql_error sql_bindings_impl<Sqlite3Stmt>::bind_null(size_t index) {
     return int2error(sqlite3_bind_null(stmt_->stmt, index));
   }
 
   template<>
-  sql_bindings::Error sql_bindings_impl<Sqlite3Stmt>::bind_text(size_t index, const char *zText, int n) {
+  sql_error sql_bindings_impl<Sqlite3Stmt>::bind_text(size_t index, const char *zText, int n) {
     return int2error(sqlite3_bind_text(stmt_->stmt, index, zText, n, nullptr));
   }
 
   template<>
-  sql_bindings::Error sql_bindings_impl<Sqlite3Stmt>::bind_text16(size_t index, const void *zText16, int n) {
+  sql_error sql_bindings_impl<Sqlite3Stmt>::bind_text16(size_t index, const void *zText16, int n) {
     return int2error(sqlite3_bind_text16(stmt_->stmt, index, zText16, n, nullptr));
   }
 };

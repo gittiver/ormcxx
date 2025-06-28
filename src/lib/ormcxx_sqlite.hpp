@@ -1,4 +1,5 @@
 #include "ormcxx/ormcxx_db.hpp"
+/// TBD remove sqlite3 include here
 #include <sqlite3.h>
 
 namespace ormcxx {
@@ -11,18 +12,20 @@ namespace ormcxx {
         friend class sql_bindings_impl<Sqlite3Stmt>;
         friend class sql_result_impl<Sqlite3Stmt>;
         friend class Sqlite3Db;
+        sql_result_impl<Sqlite3Stmt> result;
+        sql_bindings_impl<Sqlite3Stmt> bindings_;
         sqlite3* db_;
         sqlite3_stmt* stmt;
         int prepare_rc;
-        sql_result_impl<Sqlite3Stmt> result;
-        sql_bindings_impl<Sqlite3Stmt> bindings_;
-        public:
+        int exec_rc_;
+
+    public:
             Sqlite3Stmt(sqlite3* db);
             ~Sqlite3Stmt();
-            sql_stmt::error prepare(const std::string &sql_string) override;
+            sql_error prepare(const std::string &sql_string) override;
 
             sql_bindings& bindings() override { return bindings_; }
-            expected<sql_result*, error> execute() override;
+            expected<sql_result*, sql_error> execute() override;
     };
 
     class Sqlite3Db: public Database {
@@ -35,8 +38,6 @@ namespace ormcxx {
 
         Error close() override;
 
-        expected<sql_stmt *, sql_stmt::error> query(const std::string &sql_string) override;
-
-    //    Sqlite3Stmt prepare(const std::string& sql_string);
+        expected<sql_stmt *, sql_error> query(const std::string &sql_string) override;
     };
 }

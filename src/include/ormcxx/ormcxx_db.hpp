@@ -7,13 +7,16 @@
 
 #include <tl/expected.hpp>
 #include <string>
+#include <memory>
 
 namespace ormcxx {
 
     using tl::expected;
+    using tl::make_unexpected;
+
+    enum class sql_error: int {OK, NOK};
 
     struct sql_bindings {
-        enum class Error: int {OK, NOK};
 
         virtual ~sql_bindings() = default;
 
@@ -22,19 +25,20 @@ namespace ormcxx {
         virtual size_t parameter_index(const char *zName) = 0;
         virtual const char* parameter_name(size_t index) = 0;
 
-        virtual Error bind_blob(size_t index, const void*, int n)=0;
-        virtual Error bind_double(size_t index, double)=0;
-        virtual Error bind_int(size_t index, int)=0;
-        virtual Error bind_int64(size_t index, int64_t)=0;
-        virtual Error bind_null(size_t)=0;
-        virtual Error bind_text(size_t index,const char*,int)=0;
-        virtual Error bind_text16(size_t index, const void*, int)=0;
+        virtual sql_error bind_blob(size_t index, const void*, int n)=0;
+        virtual sql_error bind_double(size_t index, double)=0;
+        virtual sql_error bind_int(size_t index, int)=0;
+        virtual sql_error bind_int64(size_t index, int64_t)=0;
+        virtual sql_error bind_null(size_t)=0;
+        virtual sql_error bind_text(size_t index,const char*,int)=0;
+        virtual sql_error bind_text16(size_t index, const void*, int)=0;
     };
 
     struct sql_result {
         virtual ~sql_result() = default;
 
         virtual size_t column_count() = 0;
+        virtual std::string column_name(size_t iCol) = 0;
 
         virtual const void* column_blob(size_t iCol) = 0;
         virtual double column_double(size_t iCol) = 0;
@@ -49,16 +53,14 @@ namespace ormcxx {
     };
 
     struct sql_stmt {
-        enum class error {
-            OK, NOK
-        };
+        typedef std::unique_ptr<sql_stmt> unique_ptr;
         virtual ~sql_stmt() = default;
 
        virtual sql_bindings& bindings() = 0;
 
-        virtual error prepare(const std::string& sql_string)=0;
-        virtual expected<sql_result*,error> execute() = 0;
-        virtual expected<sql_result*,error> execute(const std::string& sql_string);
+        virtual sql_error prepare(const std::string& sql_string)=0;
+        virtual expected<sql_result*,sql_error> execute() = 0;
+        virtual expected<sql_result*,sql_error> execute(const std::string& sql_string);
     };
 	class Database {
     public:
@@ -83,12 +85,8 @@ namespace ormcxx {
 
         virtual Error close() = 0;
 
-        // virtual Error open(const std::string& connInfo) = 0;
-	    virtual expected<sql_stmt*,sql_stmt::error> query(const std::string& sql_string) =0;
+        virtual expected<sql_stmt*,sql_error> query(const std::string& sql_string) =0;
         expected<sql_result*,Error> execute(const std::string& sql_string);
-        struct Result;
-
-
     };
 
     template<class T>
@@ -99,13 +97,13 @@ namespace ormcxx {
         size_t parameter_index(const char *zName) override;
         const char* parameter_name(size_t index) override;
 
-        Error bind_blob(size_t index, const void*, int n) override;
-        Error bind_double(size_t index, double) override;
-        Error bind_int(size_t index, int) override;
-        Error bind_int64(size_t index, int64_t) override;
-        Error bind_null(size_t) override;
-        Error bind_text(size_t index,const char*,int) override;
-        Error bind_text16(size_t index, const void*, int) override;
+        sql_error bind_blob(size_t index, const void*, int n) override;
+        sql_error bind_double(size_t index, double) override;
+        sql_error bind_int(size_t index, int) override;
+        sql_error bind_int64(size_t index, int64_t) override;
+        sql_error bind_null(size_t) override;
+        sql_error bind_text(size_t index,const char*,int) override;
+        sql_error bind_text16(size_t index, const void*, int) override;
 
     private:
         const T* stmt_;
@@ -117,6 +115,7 @@ namespace ormcxx {
     class sql_result_impl : public sql_result {
     public:
         size_t column_count() override;
+        std::string column_name(size_t iCol) override;
 
         const void* column_blob(size_t iCol) override;
 
