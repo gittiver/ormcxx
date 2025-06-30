@@ -32,6 +32,7 @@ namespace ormcxx {
         virtual sql_error bind_null(size_t)=0;
         virtual sql_error bind_text(size_t index,const char*,int)=0;
         virtual sql_error bind_text16(size_t index, const void*, int)=0;
+        virtual sql_error bind_text(size_t index,const std::string&) = 0;
     };
 
     struct sql_result {
@@ -104,6 +105,7 @@ namespace ormcxx {
         sql_error bind_null(size_t) override;
         sql_error bind_text(size_t index,const char*,int) override;
         sql_error bind_text16(size_t index, const void*, int) override;
+        sql_error bind_text(size_t index,const std::string&) override;
 
     private:
         const T* stmt_;

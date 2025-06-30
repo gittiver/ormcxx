@@ -180,4 +180,9 @@ namespace ormcxx {
   sql_error sql_bindings_impl<Sqlite3Stmt>::bind_text16(size_t index, const void *zText16, int n) {
     return int2error(sqlite3_bind_text16(stmt_->stmt, index, zText16, n, nullptr));
   }
+
+  template<>
+sql_error sql_bindings_impl<Sqlite3Stmt>::bind_text(size_t index, const std::string& text) {
+    return int2error(sqlite3_bind_text(stmt_->stmt, index, text.data(), text.length(), nullptr));
+  }
 };
