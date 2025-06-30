@@ -19,6 +19,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
 
 option(ORMCXX_ENABLE_TESTS "enable testing" ON)
+option(ORMCXX_ENABLE_POSTGRES "enable postgres driver" ON)
 
 # add tartan lamas expected library
 CPMAddPackage(expected
@@ -33,12 +34,29 @@ GIT_TAG master
 GITHUB_REPOSITORY gittiver/sqlite3-amalgamation
 )
 
+if(${ORMCXX_ENABLE_POSTGRES})
+    set(PostgreSQL_LIBRARY /opt/local/lib/postgresql17/libpq.dylib)
+    set(PostgreSQL_INCLUDE_DIR /opt/local/include/postgresql17/)
+    find_package(PostgreSQL REQUIRED)
+    add_library(${PROJECT_NAME}_pq
+            src/lib/ormcxx_pq.hpp src/lib/ormcxx_pq.cpp
+            )
+    target_include_directories(
+            ${PROJECT_NAME}_pq
+            PUBLIC ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include)
+    target_link_libraries(${PROJECT_NAME}_pq
+            PUBLIC tl::expected
+            PRIVATE PostgreSQL::PostgreSQL)
+
+endif()
+
 # lib
 add_library(${PROJECT_NAME}
         src/include/ormcxx/ormcxx_sql_config.hpp src/lib/ormcxx_sql_config.cpp
         src/lib/ormcxx_table.cpp src/include/ormcxx/ormcxx_table.hpp
         src/lib/ormcxx_sqlite.hpp src/lib/ormcxx_sqlite.cpp
-        src/lib/ormcxx_db.cpp)
+        src/lib/ormcxx_db.cpp
+        src/examples/example_db_access.cpp)
 target_include_directories(
         ${PROJECT_NAME}
         PUBLIC ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include)
