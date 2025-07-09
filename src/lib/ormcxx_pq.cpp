@@ -28,11 +28,10 @@ namespace ormcxx {
     return Error::OK;
   }
 
-  expected<sql_stmt *, sql_error> PostgresDb::query(const std::string &sql_string) {
-    PostgresStmt *stmt = new PostgresStmt(hDb);
-    auto error = stmt->prepare(sql_string);
+  expected<sql_stmt, sql_error> PostgresDb::query(const std::string &sql_string) {
+    sql_stmt stmt(new PostgresStmt(hDb));
+    auto error = stmt.prepare(sql_string);
     if (error != sql_error::OK) {
-      delete stmt;
       return make_unexpected(error);
     } else {
       return stmt;
@@ -42,9 +41,8 @@ namespace ormcxx {
   PostgresStmt::PostgresStmt(PGConn* db)
     : db_(db),
       prepare_rc(0/** TBD*/),
-      exec_rc_(0 /** TBD*/),
-      result(this),
-      bindings_(this) {
+      exec_rc_(0 /** TBD*/)
+       {
   }
 
   PostgresStmt::~PostgresStmt() {
@@ -57,9 +55,9 @@ namespace ormcxx {
     return int2error(prepare_rc);
   }
 
-  expected<sql_result *, sql_error> PostgresStmt::execute() {
+  sql_error PostgresStmt::execute() {
     //if (prepare_rc != SQLITE_OK) {
-      return make_unexpected(int2error(prepare_rc));
+      return int2error(prepare_rc);
     //} else {
     //  exec_rc_ = sqlite3_step(stmt);
     //  switch (exec_rc_) {
