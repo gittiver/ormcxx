@@ -13,28 +13,41 @@ TEST_CASE("database")
 
   REQUIRE(db.has_value());
   if (db.has_value()) {
-    auto query = (*db)->query("CREATE TABLE IF NOT EXISTS contacts ( \
+    auto query = db->query("CREATE TABLE IF NOT EXISTS contacts ( \
   contact_id INTEGER PRIMARY KEY,\
   first_name TEXT NOT NULL,\
   last_name TEXT NOT NULL,\
-  email TEXT NOT NULL UNIQUE,\
-  phone TEXT NOT NULL UNIQUE\
+  email TEXT NOT NULL,\
+  phone TEXT NOT NULL\
 );");
     REQUIRE(query.has_value());
+    query->execute();
 
-    auto result = (*query)->execute();
-    REQUIRE(result.has_value());
-    auto query2 = (*db)->query("SELECT * FROM contacts;");
+    query = db->query(
+            "INSERT INTO contacts(first_name,last_name,email,phone) VALUES (?,?,?,?)");
+
+    std::cout << query->bindings().parameter_count() << endl;
+    //query->bindings().bind_text(0,"Frank",strlen("Frank"));
+    query->bindings().bind_text(1,"Frank",strlen("Frank"));
+    query->bindings().bind_text(2,"Frank",strlen("Frank"));
+    query->bindings().bind_text(3,"Frank",strlen("Frank"));
+    query->bindings().bind_text(4,"Frank",strlen("Frank"));
+
+    auto result = query->execute();
+    result = query->execute();
+
+    REQUIRE(result==ormcxx::sql_error::OK);
+    auto query2 = db->query("SELECT * FROM contacts;");
     REQUIRE(query2.has_value());
 
-    result = (*query2)->execute();
+    result = query2->execute();
 
-    REQUIRE(result.has_value());
-    REQUIRE((*result)->column_count()==5);
+    REQUIRE(result==ormcxx::sql_error::OK);
+    REQUIRE(query2->result().column_count()==5);
     for (auto i = 0; i < 5; i++) {
-      std::cout << (*result)->column_name(i)<<std::endl;
+      std::cout << query2->result().column_name(i)<<std::endl;
     }
-    std::cout << (*result)->column_name(5)<<std::endl;
+    std::cout << query2->result().column_name(5)<<std::endl;
 
   }
 

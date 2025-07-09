@@ -52,7 +52,7 @@ target_link_libraries(${PROJECT_NAME}_main
 )
 target_include_directories(${PROJECT_NAME}_main PRIVATE ${expected_SOURCE_DIR}/include)
 
-add_executable(db_access src/examples/example_db_access.cpp)
+add_executable(db_access src/examples/db_access.cpp)
 target_link_libraries(db_access
         PRIVATE
         ${PROJECT_NAME}
