@@ -35,8 +35,10 @@ GITHUB_REPOSITORY gittiver/sqlite3-amalgamation
 )
 
 if(${ORMCXX_ENABLE_POSTGRES})
-    set(PostgreSQL_LIBRARY /opt/local/lib/postgresql17/libpq.dylib)
-    set(PostgreSQL_INCLUDE_DIR /opt/local/include/postgresql17/)
+    if (APPLE)
+        set(PostgreSQL_LIBRARY /opt/local/lib/postgresql17/libpq.dylib)
+        set(PostgreSQL_INCLUDE_DIR /opt/local/include/postgresql17/)
+    endif ()
     find_package(PostgreSQL REQUIRED)
     add_library(${PROJECT_NAME}_pq
             src/lib/ormcxx_pq.hpp src/lib/ormcxx_pq.cpp
@@ -47,7 +49,6 @@ if(${ORMCXX_ENABLE_POSTGRES})
     target_link_libraries(${PROJECT_NAME}_pq
             PUBLIC tl::expected
             PRIVATE PostgreSQL::PostgreSQL)
-
 endif()
 
 # lib
