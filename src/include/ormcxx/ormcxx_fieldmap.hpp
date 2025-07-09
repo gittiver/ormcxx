@@ -70,8 +70,9 @@ namespace ormcxx {
   public:
     std::unique_ptr<AccessWrapper<ClassType, FieldType>> mAccessWrapper;
     void readFromDriver(ClassType* instance, int columnIndex) {
-      FieldType t;
+      FieldType t{};
       std::cout << "read " << typeid(instance).name() << ":" << columnIndex << std::endl;
+
       //Utility::driverToVariable(SqlEntityConfigurer<ClassType>::driver(), columnIndex, Utility::initializeInstance(&t));
       mAccessWrapper->set(instance, &t);
     }

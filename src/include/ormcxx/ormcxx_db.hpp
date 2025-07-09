@@ -32,37 +32,59 @@ namespace ormcxx {
         virtual sql_error bind_null(size_t)=0;
         virtual sql_error bind_text(size_t index,const char*,int)=0;
         virtual sql_error bind_text16(size_t index, const void*, int)=0;
-        virtual sql_error bind_text(size_t index,const std::string&) = 0;
+        virtual sql_error bind_text(size_t index,const std::string&);
     };
 
     struct sql_result {
         virtual ~sql_result() = default;
 
-        virtual size_t column_count() = 0;
-        virtual std::string column_name(size_t iCol) = 0;
+        virtual size_t column_count() const = 0;
+        virtual std::string column_name(size_t iCol) const = 0;
 
-        virtual const void* column_blob(size_t iCol) = 0;
-        virtual double column_double(size_t iCol) = 0;
-        virtual int column_int(size_t iCol) = 0;
-        virtual int64_t column_int64(size_t iCol) = 0;
-        virtual const unsigned char* column_text(size_t iCol) = 0;
-        virtual const void* column_text16(size_t iCol) = 0;
-        virtual int column_bytes(size_t iCol) = 0;
+        virtual const void* column_blob(size_t iCol) const = 0;
+        virtual double column_double(size_t iCol) const = 0;
+        virtual int column_int(size_t iCol) const = 0;
+        virtual int64_t column_int64(size_t iCol) const = 0;
+        virtual const unsigned char* column_text(size_t iCol) const = 0;
+        virtual const void* column_text16(size_t iCol) const = 0;
+        virtual int column_bytes(size_t iCol) const = 0;
         // int sqlite3_column_type(sqlite3_stmt*, size_t iCol);bool next_row();
 
-        virtual bool next_row() = 0;
+        virtual bool next_row() const = 0;
     };
 
-    struct sql_stmt {
-        typedef std::unique_ptr<sql_stmt> unique_ptr;
-        virtual ~sql_stmt() = default;
+    struct sql_stmt_base {
+        virtual ~sql_stmt_base() = default;
 
-       virtual sql_bindings& bindings() = 0;
+        virtual sql_bindings& bindings() = 0;
+        virtual const sql_result& result() const= 0;
 
         virtual sql_error prepare(const std::string& sql_string)=0;
-        virtual expected<sql_result*,sql_error> execute() = 0;
-        virtual expected<sql_result*,sql_error> execute(const std::string& sql_string);
+        virtual sql_error execute() = 0;
+        virtual sql_error execute(const std::string& sql_string)=0;
     };
+
+    struct sql_stmt: public sql_stmt_base {
+
+        explicit sql_stmt(sql_stmt_base* pImpl_);
+        sql_stmt(sql_stmt&&) = default;
+        sql_stmt(const sql_stmt&) = delete;
+        ~sql_stmt() = default;
+
+        sql_stmt& operator=(sql_stmt&&) = default;
+        sql_stmt& operator=(const sql_stmt&) = delete;
+        sql_bindings& bindings() override;
+        const sql_result& result() const override;
+        sql_error prepare(const std::string& sql_string) override;
+        sql_error execute(const std::string& sql_string) override;
+
+        sql_error execute() override;
+
+    private:
+        std::unique_ptr<sql_stmt_base> pImpl;
+
+    };
+
 	class Database {
     public:
         enum class Error {
@@ -79,69 +101,26 @@ namespace ormcxx {
         };
 
 
-        /** closes database */
-        virtual ~Database()=default;
-        
-        static expected<Database*,Error> open(BackendType backendType, const std::string& connInfo);
+	    explicit Database(Database* pImpl_);
+	    Database(Database&&) = default;
+	    Database(const Database&) = delete;
+	    virtual ~Database() = default;
 
-        virtual Error close() = 0;
+	    Database& operator=(Database&&) = default;
+	    Database& operator=(const Database&) = delete;
 
-        virtual expected<sql_stmt*,sql_error> query(const std::string& sql_string) =0;
+        static expected<Database,Error> open(BackendType backendType, const std::string& connInfo);
+
+        virtual Error close();
+
+        virtual expected<sql_stmt,sql_error> query(const std::string& sql_string);
         expected<sql_result*,Error> execute(const std::string& sql_string);
+    protected:
+	    Database()=default;
+
+	private:
+	    std::unique_ptr<Database> pImpl;
     };
-
-    template<class T>
-    class sql_bindings_impl : public sql_bindings {
-    public:
-        size_t parameter_count() override;
-
-        size_t parameter_index(const char *zName) override;
-        const char* parameter_name(size_t index) override;
-
-        sql_error bind_blob(size_t index, const void*, int n) override;
-        sql_error bind_double(size_t index, double) override;
-        sql_error bind_int(size_t index, int) override;
-        sql_error bind_int64(size_t index, int64_t) override;
-        sql_error bind_null(size_t) override;
-        sql_error bind_text(size_t index,const char*,int) override;
-        sql_error bind_text16(size_t index, const void*, int) override;
-        sql_error bind_text(size_t index,const std::string&) override;
-
-    private:
-        const T* stmt_;
-    public:
-
-        sql_bindings_impl(const T* stmt) : stmt_(stmt) {}; ;
-    };
-    template<class T>
-    class sql_result_impl : public sql_result {
-    public:
-        size_t column_count() override;
-        std::string column_name(size_t iCol) override;
-
-        const void* column_blob(size_t iCol) override;
-
-        double column_double(size_t iCol) override;
-
-        int column_int(size_t iCol) override;
-
-        int64_t column_int64(size_t iCol) override;
-
-        const unsigned char* column_text(size_t iCol) override;
-
-        const void* column_text16(size_t iCol) override;
-
-        int column_bytes(size_t iCol) override;
-
-        bool next_row() override;
-
-    private:
-        const T* stmt_;
-    public:
-
-        sql_result_impl(const T* stmt) : stmt_(stmt) {}; ;
-    };
-
 } // ormcxx
 
 #endif //ORMCXX_DB_HPP

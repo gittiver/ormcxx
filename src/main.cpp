@@ -12,7 +12,7 @@ using std::endl;
 void do_sql_config() {
 
   struct C {
-    int id;
+    int id{0};
     std::string name;
   };
 
@@ -23,10 +23,10 @@ void do_sql_config() {
   cout << sql_config<C>::to_ddl() << endl;
   cout << sql_config<C>::field_mapping().size() << endl;
 
+    C c;
   for (size_t i=0; i < sql_config<C>::field_mapping().size();++i) {
     auto entry = sql_config<C>::field_mapping().at(i);
     cout << typeid(entry).name() << endl;
-    C c;
     entry->readFromDriver(&c,i);
   }
 
