@@ -1,6 +1,6 @@
 #include "ormcxx/ormcxx_db.hpp"
 #include "ormcxx_sqlite.hpp"
-
+#include "ormcxx_pq.hpp"
 namespace ormcxx {
 
   sql_stmt::sql_stmt(sql_stmt_base *pImpl_)
@@ -45,6 +45,17 @@ namespace ormcxx {
             return Database(*db);
           }
         }
+        break;
+      case BackendType::POSTGRESQL:
+        {
+        auto db = PostgresDb::open(connInfo);
+        if (!db) {
+          return make_unexpected(Error::ERROR_NOT_FOUND);
+        } else {
+          return Database(*db);
+        }
+
+      };
         break;
       default:
         return make_unexpected(Error::NO_DB_DRIVER);

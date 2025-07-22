@@ -133,7 +133,7 @@ namespace ormcxx {
     return sqlite3_column_bytes(stmt, iCol);
   }
 
-  bool Sqlite3Stmt::next_row() const {
+  bool Sqlite3Stmt::next_row()  {
     return sqlite3_step(stmt) == SQLITE_ROW;
   }
 

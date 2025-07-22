@@ -50,7 +50,7 @@ namespace ormcxx {
         virtual int column_bytes(size_t iCol) const = 0;
         // int sqlite3_column_type(sqlite3_stmt*, size_t iCol);bool next_row();
 
-        virtual bool next_row() const = 0;
+        virtual bool next_row() = 0;
     };
 
     struct sql_stmt_base {
@@ -97,7 +97,7 @@ namespace ormcxx {
             SQLITE,
         //    ODBC,
         //    MARIA_DB,
-        //    POSTGRESQL
+            POSTGRESQL
         };
 
 

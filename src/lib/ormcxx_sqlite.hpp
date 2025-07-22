@@ -64,7 +64,7 @@ namespace ormcxx {
 
         int column_bytes(size_t iCol) const override;
 
-        bool next_row() const override;
+        bool next_row() override;
 
 
         friend class Sqlite3Db;
