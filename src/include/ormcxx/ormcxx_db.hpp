@@ -123,7 +123,7 @@ namespace ormcxx {
             SQLITE,
         //    ODBC,
         //    MARIA_DB,
-        //    POSTGRESQL
+            POSTGRESQL
         };
 
 

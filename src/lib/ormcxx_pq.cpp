@@ -9,15 +9,20 @@ namespace ormcxx {
   }
 
   expected<Database *, Database::Error> PostgresDb::open(const std::string &connInfo) {
-    //auto db = new PostgresDb();
+    pg_conn* conn = PQconnectdb(connInfo.c_str());
+    switch (PQstatus(conn)) {
+      case CONNECTION_OK:
+        {
+          auto db = new PostgresDb();
+          db->hDb = conn;
+        return db;
+        }
+      case CONNECTION_BAD:
+      default:
+        PQfinish(conn);
+        return make_unexpected(Database::Error::ERROR_NOT_FOUND);
 
-
-    //int r = sqlite3_open(connInfo.c_str(), &db->hDb);
-    //switch (r) {
-    //  case SQLITE_OK: return db;
-    //  default: delete db;
-        return tl::make_unexpected(Database::Error::ERROR_NOT_FOUND);
-    //}
+    }
   }
 
   Database::Error PostgresDb::close() {
@@ -38,7 +43,7 @@ namespace ormcxx {
     }
   }
 
-  PostgresStmt::PostgresStmt(PGConn* db)
+  PostgresStmt::PostgresStmt(PGconn* db)
     : db_(db),
       prepare_rc(0/** TBD*/),
       exec_rc_(0 /** TBD*/)
@@ -69,6 +74,10 @@ namespace ormcxx {
     //  return &result;
     // }
   }
+  sql_error PostgresStmt::execute(const std::string &sql_string) {
+    return int2error(prepare_rc);
+
+  }
 
 
   static sql_error int2error(int error) {
@@ -80,107 +89,104 @@ namespace ormcxx {
     }
   }
 
-  /*// sqlresult for sqlite3
-  template<>
-  size_t sql_result_impl<PostgresStmt>::column_count() {
-    return sqlite3_column_count(stmt_->stmt);
+  // sqlresult for sqlite3
+  size_t PostgresStmt::column_count() const {
+    return PQnfields(res);
   }
 
-  template<>
-  std::string sql_result_impl<PostgresStmt>::column_name(size_t iCol) {
-    const char *pszName = sqlite3_column_name(stmt_->stmt, iCol);
+  std::string PostgresStmt::column_name(size_t iCol) const {
+    const char *pszName = PQfname(res, iCol);
     return pszName ? std::string(pszName) : std::string();
   }
 
-  template<>
-  const void *sql_result_impl<PostgresStmt>::column_blob(size_t iCol) {
-    return sqlite3_column_blob(stmt_->stmt, iCol);
+  const void *PostgresStmt::column_blob(size_t iCol) const{
+    return PQgetvalue(res,row,iCol);
   }
 
-  template<>
-  double sql_result_impl<PostgresStmt>::column_double(size_t iCol) {
-    return sqlite3_column_double(stmt_->stmt, iCol);
+  double PostgresStmt::column_double(size_t iCol) const{
+    double d = 0.0;
+    char* pval= PQgetvalue(res,row, iCol);
+    d=*pval;
+    return d;
   }
 
-  template<>
-  int sql_result_impl<PostgresStmt>::column_int(size_t iCol) {
-    return sqlite3_column_int(stmt_->stmt, iCol);
+  int PostgresStmt::column_int(size_t iCol) const{
+    int v = 0.0;
+    char* pval= PQgetvalue(res,row, iCol);
+    v =*pval;
+    return v;
   }
 
-  template<>
-  int64_t sql_result_impl<PostgresStmt>::column_int64(size_t iCol) {
-    return sqlite3_column_int64(stmt_->stmt, iCol);
+  int64_t PostgresStmt::column_int64(size_t iCol) const{
+    int64_t v = 0.0;
+    char* pval= PQgetvalue(res,row, iCol);
+    v =*pval;
+    return v;
   }
 
-  template<>
-  const unsigned char *sql_result_impl<PostgresStmt>::column_text(size_t iCol) {
-    return sqlite3_column_text(stmt_->stmt, iCol);
+  const unsigned char *PostgresStmt::column_text(size_t iCol) const{
+    return reinterpret_cast<unsigned char*>(PQgetvalue(res,row, iCol));
   }
 
-  template<>
-  const void *sql_result_impl<PostgresStmt>::column_text16(size_t iCol) {
-    return sqlite3_column_text16(stmt_->stmt, iCol);
+  const void *PostgresStmt::column_text16(size_t iCol) const{
+    return PQgetvalue(res,row, iCol);
   }
 
-  template<>
-  int sql_result_impl<PostgresStmt>::column_bytes(size_t iCol) {
-    return sqlite3_column_bytes(stmt_->stmt, iCol);
+  int PostgresStmt::column_bytes(size_t iCol) const{
+    return PQgetlength(res,row, iCol);
   }
 
-  template<>
-  bool sql_result_impl<PostgresStmt>::next_row() {
-    return sqlite3_step(stmt_->stmt) == SQLITE_ROW;
+  bool PostgresStmt::next_row() {
+    char* pszTuples = PQcmdTuples(res);
+    long long tuples = atoll(pszTuples);
+    if (row < tuples-1) {
+      ++row;
+      return true;
+    } else
+      return false;
   }
 
 
   // sql_bindings for sqlite3
-  template<>
-  size_t sql_bindings_impl<PostgresStmt>::parameter_count() {
-    return sqlite3_bind_parameter_count(stmt_->stmt);
+  size_t PostgresStmt::parameter_count() {
+    return PQnparams(res_describe_prepared);
   }
 
-  template<>
-  size_t sql_bindings_impl<PostgresStmt>::parameter_index(const char *zName) {
-    return sqlite3_bind_parameter_index(stmt_->stmt, zName);
+  size_t PostgresStmt::parameter_index(const char *pszName) {
+    return PQfnumber(res_describe_prepared,pszName);
   }
 
-  template<>
-  const char *sql_bindings_impl<PostgresStmt>::parameter_name(size_t index) {
-    return sqlite3_bind_parameter_name(stmt_->stmt, index);
+  const char *PostgresStmt::parameter_name(size_t index) {
+    return PQfname(res_describe_prepared,index);
   }
 
-  template<>
-  sql_error sql_bindings_impl<PostgresStmt>::bind_blob(size_t index, const void *pBlob, int n) {
-    return int2error(sqlite3_bind_blob(stmt_->stmt, index, pBlob, n, nullptr));
+  sql_error PostgresStmt::bind_blob(size_t index, const void *pBlob, int n) {
+  return sql_error::NOK;
   }
 
-  template<>
-  sql_error sql_bindings_impl<PostgresStmt>::bind_double(size_t index, double value) {
-    return int2error(sqlite3_bind_double(stmt_->stmt, index, value));
+  sql_error PostgresStmt::bind_double(size_t index, double value) {
+  return sql_error::NOK;
   }
 
-  template<>
-  sql_error sql_bindings_impl<PostgresStmt>::bind_int(size_t index, int value) {
-    return int2error(sqlite3_bind_int(stmt_->stmt, index, value));
+  sql_error PostgresStmt::bind_int(size_t index, int value) {
+    return sql_error::NOK;
+
   }
 
-  template<>
-  sql_error sql_bindings_impl<PostgresStmt>::bind_int64(size_t index, int64_t value) {
-    return int2error(sqlite3_bind_int64(stmt_->stmt, index, value));
+  sql_error PostgresStmt::bind_int64(size_t index, int64_t value) {
+  return sql_error::NOK;
   }
 
-  template<>
-  sql_error sql_bindings_impl<PostgresStmt>::bind_null(size_t index) {
-    return int2error(sqlite3_bind_null(stmt_->stmt, index));
+  sql_error PostgresStmt::bind_null(size_t index) {
+    return sql_error::NOK;
+
   }
 
-  template<>
-  sql_error sql_bindings_impl<PostgresStmt>::bind_text(size_t index, const char *zText, int n) {
-    return int2error(sqlite3_bind_text(stmt_->stmt, index, zText, n, nullptr));
+  sql_error PostgresStmt::bind_text(size_t index, const char *zText, int n) {
+  return sql_error::NOK;
   }
 
-  template<>
-  sql_error sql_bindings_impl<PostgresStmt>::bind_text16(size_t index, const void *zText16, int n) {
-    return int2error(sqlite3_bind_text16(stmt_->stmt, index, zText16, n, nullptr));
-  }*/
+  sql_error PostgresStmt::bind_text16(size_t index, const void *zText16, int n) {
+  return sql_error::NOK;
+  }
 };

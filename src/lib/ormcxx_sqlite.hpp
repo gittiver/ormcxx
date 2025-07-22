@@ -70,7 +70,6 @@ namespace ormcxx {
 
         bool next_row() const override;
 
-
         friend class Sqlite3Db;
         sqlite3* db_;
         sqlite3_stmt* stmt;
