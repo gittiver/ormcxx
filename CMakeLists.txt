@@ -57,8 +57,7 @@ add_library(${PROJECT_NAME}
         src/lib/ormcxx_table.cpp src/include/ormcxx/ormcxx_table.hpp
         src/lib/ormcxx_sqlite.hpp src/lib/ormcxx_sqlite.cpp
         src/lib/ormcxx_db.cpp
-
-        src/examples/db_access.cpp)
+)
 target_include_directories(
         ${PROJECT_NAME}
         PUBLIC ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include)
