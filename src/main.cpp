@@ -1,6 +1,5 @@
-#include <iostream>
-
-#include "include/ormcxx/ormcxx_sql_config.hpp"
+#include "ormcxx/logging.hpp"
+#include "ormcxx/ormcxx_sql_config.hpp"
 
 using ormcxx::sql_table_definition;
 using ormcxx::sql_column_definition;
@@ -26,7 +25,7 @@ void do_sql_config() {
     C c;
   for (size_t i=0; i < sql_config<C>::field_mapping().size();++i) {
     auto entry = sql_config<C>::field_mapping().at(i);
-    cout << typeid(entry).name() << endl;
+    ORMCXX_LOG_DEBUG << typeid(entry).name();
     entry->readFromDriver(&c,i);
   }
 
@@ -37,7 +36,7 @@ int main() {
   table.columns.push_back({"id",{"int"},ormcxx::Nullable::NULLABLE,ormcxx::ePRIMARY_KEY::PRIMARY_KEY});
   table.columns.push_back({"name1",{"type1"},ormcxx::Nullable::NOT_NULL,ormcxx::ePRIMARY_KEY::NO_PRIMARY_KEY});
 
-  cout << table.to_ddl() << endl;
+  ORMCXX_LOG_DEBUG << table.to_ddl();
 
   do_sql_config();
   return 0;

@@ -1,3 +1,6 @@
+#ifndef ORMCXX_SQLITE_HPP
+#define ORMCXX_SQLITE_HPP
+
 #include "ormcxx/ormcxx_db.hpp"
 
 struct sqlite3;
@@ -88,3 +91,5 @@ namespace ormcxx {
         expected<sql_stmt, sql_error> query(const std::string &sql_string) override;
     };
 }
+
+#endif // #ifndef ORMCXX_SQLITE_HPP
