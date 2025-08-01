@@ -12,14 +12,13 @@ struct descriptor {
 };
 const std::vector<descriptor> connection_types = {
   {Database::BackendType::SQLITE, ":memory:"},
-  {Database::BackendType::POSTGRESQL, "postgresql://testuser@localhost/test"}
+  {Database::BackendType::POSTGRESQL, "postgresql://testuser@localhost/postgres"}
 };
 
 TEST_CASE("open database") {
   for (auto const &c: connection_types) {
     auto db = Database::open(c.backend_type, c.connection_string);
     if (!db) {
-      //REQUIRE(db.has_value()==true);
       FAIL("can not open connection:"+ std::to_string((int)c.backend_type)+"," + c.connection_string);
     }
     REQUIRE(db.has_value()==true);
@@ -30,8 +29,9 @@ TEST_CASE("open database") {
 TEST_CASE("sql_query_and_execute") {
   for (auto const &c: connection_types) {
     auto db = Database::open(c.backend_type, c.connection_string);
-    REQUIRE(db.has_value()==true);
-    if (db.has_value()) {
+    if (!db) {
+      FAIL("can not open connection:"+ std::to_string((int)c.backend_type)+"," + c.connection_string);
+    } else {
       auto query = db->query(
         "CREATE TABLE IF NOT EXISTS contacts ( "
         "contact_id INTEGER PRIMARY KEY,"
@@ -50,15 +50,13 @@ TEST_CASE("sql_query_and_execute") {
 TEST_CASE("sql_query_bindings") {
   for (auto const &c: connection_types) {
     auto db = Database::open(c.backend_type, c.connection_string);
-    REQUIRE(db.has_value()==true);
     if (!db) {
-      //REQUIRE(db.has_value()==true);
-      FAIL("x" + c.connection_string);
+      FAIL("can not open connection:"+ std::to_string((int)c.backend_type)+"," + c.connection_string);
     } else {
       auto query = db->query(
         "INSERT INTO contacts(first_name,last_name,email,phone) VALUES (?,?,?,?)");
-      REQUIRE(query);
-      std::cout << query->bindings().parameter_count() << endl;
+      REQUIRE(query.has_value()==true);
+      std::cout << "n_of_parameters" << query->bindings().parameter_count() << endl;
       //query->bindings().bind_text(0,"Frank",strlen("Frank"));
       query->bindings().bind_text(1, "Frank", strlen("Frank"));
       query->bindings().bind_text(2, "Frank", strlen("Frank"));

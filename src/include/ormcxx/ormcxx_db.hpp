@@ -25,13 +25,13 @@ namespace ormcxx {
         virtual size_t parameter_index(const char *zName) = 0;
         virtual const char* parameter_name(size_t index) = 0;
 
-        virtual sql_error bind_blob(size_t index, const void*, int n)=0;
+        virtual sql_error bind_blob(size_t index, const void*, size_t n)=0;
         virtual sql_error bind_double(size_t index, double)=0;
         virtual sql_error bind_int(size_t index, int)=0;
         virtual sql_error bind_int64(size_t index, int64_t)=0;
         virtual sql_error bind_null(size_t)=0;
-        virtual sql_error bind_text(size_t index,const char*,int)=0;
-        virtual sql_error bind_text16(size_t index, const void*, int)=0;
+        virtual sql_error bind_text(size_t index, const char* pszText, size_t pszText_Len)=0;
+        virtual sql_error bind_text16(size_t index, const void*, size_t len)=0;
         virtual sql_error bind_text(size_t index,const std::string&);
     };
 
@@ -69,7 +69,6 @@ namespace ormcxx {
         explicit sql_stmt(sql_stmt_base* pImpl_);
         sql_stmt(sql_stmt&&) = default;
         sql_stmt(const sql_stmt&) = delete;
-        ~sql_stmt() = default;
 
         sql_stmt& operator=(sql_stmt&&) = default;
         sql_stmt& operator=(const sql_stmt&) = delete;
@@ -79,7 +78,6 @@ namespace ormcxx {
         sql_error execute(const std::string& sql_string) override;
 
         sql_error execute() override;
-
     private:
         std::unique_ptr<sql_stmt_base> pImpl;
 
@@ -115,7 +113,7 @@ namespace ormcxx {
 
         virtual expected<sql_stmt,sql_error> query(const std::string& sql_string);
         expected<sql_result*,Error> execute(const std::string& sql_string);
-    protected:
+	protected:
 	    Database()=default;
 
 	private:

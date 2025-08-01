@@ -154,7 +154,7 @@ namespace ormcxx {
   }
 
 
-  sql_error Sqlite3Stmt::bind_blob(size_t index, const void *pBlob, int n) {
+  sql_error Sqlite3Stmt::bind_blob(size_t index, const void *pBlob, size_t n) {
     return int2error(sqlite3_bind_blob(stmt, index, pBlob, n, nullptr));
   }
 
@@ -179,12 +179,12 @@ namespace ormcxx {
   }
 
 
-  sql_error Sqlite3Stmt::bind_text(size_t index, const char *zText, int n) {
+  sql_error Sqlite3Stmt::bind_text(size_t index, const char *zText, size_t n) {
     return int2error(sqlite3_bind_text(stmt, index, zText, n, nullptr));
   }
 
 
-  sql_error Sqlite3Stmt::bind_text16(size_t index, const void *zText16, int n) {
-    return int2error(sqlite3_bind_text16(stmt, index, zText16, n, nullptr));
+  sql_error Sqlite3Stmt::bind_text16(size_t index, const void *zText16, size_t len) {
+    return int2error(sqlite3_bind_text16(stmt, index, zText16, len, nullptr));
   }
 };
