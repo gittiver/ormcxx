@@ -69,12 +69,14 @@ target_link_libraries(${PROJECT_NAME}_main
         PRIVATE
         ${PROJECT_NAME}
 )
-target_include_directories(${PROJECT_NAME}_main PRIVATE ${expected_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME}_main
+  PRIVATE
+  ${expected_SOURCE_DIR}/include)
 
 add_executable(db_access src/examples/db_access.cpp)
 target_link_libraries(db_access
-        PRIVATE
-        ${PROJECT_NAME}
+  PRIVATE
+  ${PROJECT_NAME} ${PROJECT_NAME}_pq
 )
 
 include(CTest)
