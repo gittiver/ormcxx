@@ -32,6 +32,9 @@ namespace ormcxx {
   const sql_result& sql_stmt::result() const {
     return pImpl->result();
   }
+  sql_result& sql_stmt::result() {
+    return pImpl->result();
+  }
 
 
   Database::Database(DatabaseImpl *pImpl_)

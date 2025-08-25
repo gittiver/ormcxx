@@ -59,6 +59,7 @@ namespace ormcxx {
 
         virtual sql_bindings& bindings() = 0;
         virtual const sql_result& result() const= 0;
+        virtual sql_result& result() = 0;
 
         virtual sql_error prepare(const std::string& sql_string)=0;
         virtual sql_error execute() = 0;
@@ -76,6 +77,7 @@ namespace ormcxx {
         sql_stmt& operator=(const sql_stmt&) = delete;
         sql_bindings& bindings() override;
         const sql_result& result() const override;
+        sql_result& result() override;
         sql_error prepare(const std::string& sql_string) override;
         sql_error execute(const std::string& sql_string) override;
 
