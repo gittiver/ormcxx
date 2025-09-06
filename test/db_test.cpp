@@ -12,7 +12,7 @@ struct descriptor {
 };
 const std::vector<descriptor> connection_types = {
   {Database::BackendType::SQLITE, ":memory:"},
-  {Database::BackendType::POSTGRESQL, "postgresql://testuser@localhost/postgres"}
+  {Database::BackendType::POSTGRESQL, "postgresql://testuser:mypassword@localhost/test_db"}
 };
 
 TEST_CASE("open database") {
