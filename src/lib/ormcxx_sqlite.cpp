@@ -4,7 +4,7 @@
 #include <iostream>
 
 namespace ormcxx {
-  static sql_error int2error(int error);
+  static sql_error status2error(int error);
 
   Sqlite3Db::Sqlite3Db()
     : hDb(nullptr) {
@@ -55,12 +55,12 @@ namespace ormcxx {
 
   sql_error Sqlite3Stmt::prepare(const std::string &sql_string) {
     prepare_rc = sqlite3_prepare_v2(db_, sql_string.data(), sql_string.length(), &stmt, nullptr);
-    return int2error(prepare_rc);
+    return status2error(prepare_rc);
   }
 
   sql_error Sqlite3Stmt::execute() {
     if (prepare_rc != SQLITE_OK) {
-      return int2error(prepare_rc);
+      return status2error(prepare_rc);
     } else {
       const auto start{std::chrono::steady_clock::now()};
       exec_rc_ = sqlite3_step(stmt);
@@ -71,7 +71,7 @@ namespace ormcxx {
         case SQLITE_ROW:
         case SQLITE_DONE:
         case SQLITE_OK: return sql_error::OK;
-        default: return int2error(exec_rc_);
+        default: return status2error(exec_rc_);
       }
     }
   }
@@ -86,7 +86,7 @@ namespace ormcxx {
   }
 
 
-  static sql_error int2error(int error) {
+  static sql_error status2error(int error) {
     switch (error) {
       case SQLITE_OK: return sql_error::OK;
         break;
@@ -155,36 +155,36 @@ namespace ormcxx {
 
 
   sql_error Sqlite3Stmt::bind_blob(size_t index, const void *pBlob, size_t n) {
-    return int2error(sqlite3_bind_blob(stmt, index, pBlob, n, nullptr));
+    return status2error(sqlite3_bind_blob(stmt, index, pBlob, n, nullptr));
   }
 
 
   sql_error Sqlite3Stmt::bind_double(size_t index, double value) {
-    return int2error(sqlite3_bind_double(stmt, index, value));
+    return status2error(sqlite3_bind_double(stmt, index, value));
   }
 
 
   sql_error Sqlite3Stmt::bind_int(size_t index, int value) {
-    return int2error(sqlite3_bind_int(stmt, index, value));
+    return status2error(sqlite3_bind_int(stmt, index, value));
   }
 
 
   sql_error Sqlite3Stmt::bind_int64(size_t index, int64_t value) {
-    return int2error(sqlite3_bind_int64(stmt, index, value));
+    return status2error(sqlite3_bind_int64(stmt, index, value));
   }
 
 
   sql_error Sqlite3Stmt::bind_null(size_t index) {
-    return int2error(sqlite3_bind_null(stmt, index));
+    return status2error(sqlite3_bind_null(stmt, index));
   }
 
 
   sql_error Sqlite3Stmt::bind_text(size_t index, const char *zText, size_t n) {
-    return int2error(sqlite3_bind_text(stmt, index, zText, n, nullptr));
+    return status2error(sqlite3_bind_text(stmt, index, zText, n, nullptr));
   }
 
 
   sql_error Sqlite3Stmt::bind_text16(size_t index, const void *zText16, size_t len) {
-    return int2error(sqlite3_bind_text16(stmt, index, zText16, len, nullptr));
+    return status2error(sqlite3_bind_text16(stmt, index, zText16, len, nullptr));
   }
 };
