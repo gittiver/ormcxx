@@ -3,7 +3,7 @@
 #include <iostream>
 
 namespace ormcxx {
-  static sql_error int2error(int error);
+  static sql_error status2error(int error);
 
   PostgresDb::~PostgresDb() {
     close();
@@ -55,23 +55,37 @@ namespace ormcxx {
 
 
   sql_error PostgresStmt::prepare(const std::string &sql_string) {
-    prepare_rc = 0/** TBD*/; //sqlite3_prepare_v2(db_, sql_string.data(), sql_string.length(), &stmt, nullptr);
-    return int2error(prepare_rc);
+    res = PQprepare(db_,"stmt",sql_string.c_str(),0,nullptr);
+    prepare_rc = PQresultStatus(res);
+
+    switch (prepare_rc) {
+      case PGRES_COMMAND_OK:
+      case PGRES_TUPLES_OK:
+        return sql_error::OK;
+      default:
+        std::cout << PQerrorMessage(db_);
+        return status2error(prepare_rc);
+    }
   }
 
   sql_error PostgresStmt::execute() {
-    //if (prepare_rc != SQLITE_OK) {
-    return int2error(prepare_rc);
-    //} else {
-    //  exec_rc_ = sqlite3_step(stmt);
-    //  switch (exec_rc_) {
-    //    case SQLITE_ROW: break;
-    //    case SQLITE_DONE: break;
-    //    case SQLITE_OK: break;
-    //    default: return make_unexpected(int2error(exec_rc_));
-    //  }
-    //  return &result;
-    // }
+    constexpr size_t n= 0;
+    const char* values[n]={};
+    int lengths[n]={};
+    int formats[n]={};
+    PQclear(res);
+    res = PQexecPrepared(db_,"stmt",n,values,lengths,formats,1);
+
+    exec_rc_ = PQresultStatus(res);
+
+    switch (exec_rc_) {
+      case PGRES_COMMAND_OK:
+      case PGRES_TUPLES_OK:
+        return sql_error::OK;
+      default:
+        std::cout << PQerrorMessage(db_);
+        return status2error(prepare_rc);
+    }
   }
 
   sql_error PostgresStmt::execute(const std::string &sql_string) {
@@ -84,18 +98,17 @@ namespace ormcxx {
         return sql_error::OK;
       default:
         std::cout << PQerrorMessage(db_);
-        return int2error(prepare_rc);
+        return status2error(prepare_rc);
     }
   }
 
 
-  static sql_error int2error(int error) {
+  static sql_error status2error(int error) {
     switch (error) {
       case PGRES_COMMAND_OK:
       case PGRES_TUPLES_OK:
         return sql_error::OK;
       default: return sql_error::NOK;
-        break;
     }
   }
 
