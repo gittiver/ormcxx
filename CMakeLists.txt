@@ -64,7 +64,7 @@ if(${ORMCXX_ENABLE_TESTS})
   enable_testing()
 
   CPMAddPackage(Catch2
-    VERSION 3.8.1
+    VERSION 3.10.0
     GITHUB_REPOSITORY catchorg/Catch2
     OPTIONS
     "CATCH_INSTALL_DOCS Off"
