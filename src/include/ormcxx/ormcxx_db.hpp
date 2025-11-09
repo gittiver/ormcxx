@@ -8,6 +8,7 @@
 #include <tl/expected.hpp>
 #include <string>
 #include <memory>
+#include <map>
 
 namespace ormcxx {
 
@@ -83,6 +84,21 @@ namespace ormcxx {
     private:
         std::unique_ptr<sql_stmt_base> pImpl;
 
+    };
+
+    class Driver {
+        public:
+        enum class BackendType {
+            SQLITE,
+        //    ODBC,
+        //    MARIA_DB,
+        //    POSTGRESQL
+        };
+
+        static Driver* instance(BackendType backend);
+
+        typedef std::map<std::type_info,std::string> type_map;
+        virtual type_map typemap()=0;
     };
 
 	class Database {

@@ -20,8 +20,10 @@ void do_sql_config() {
   sql_config<C>::setPrimaryField("id",&C::id);
   sql_config<C>::setField("name",&C::name);
 
+
   cout << sql_config<C>::to_ddl() << endl;
   cout << sql_config<C>::field_mapping().size() << endl;
+
 
     C c;
   for (size_t i=0; i < sql_config<C>::field_mapping().size();++i) {

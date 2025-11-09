@@ -38,7 +38,7 @@ namespace ormcxx {
 
   class sql_table_definition {
     std::vector<index_definition> indices;
-
+    void append_column_list(std::string& output, const std::string& separator=",") const;
   public:
     explicit sql_table_definition(const std::string &name = "") : name(name) {
     }
@@ -52,6 +52,13 @@ namespace ormcxx {
     std::vector<std::string> primary_keys() const;
 
     std::string to_ddl() const;
+    std::string select_all() const;
+    std::string select_by_id() const;
+    std::string insert() const;
+    std::string update_by_id() const;
+    std::string delete_by_id() const;
+
+
   };
 
   } // ormcxx

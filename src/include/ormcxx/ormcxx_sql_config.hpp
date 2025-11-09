@@ -10,22 +10,24 @@
 #include <typeinfo>
 
 namespace ormcxx {
-    std::string sql_type(const std::type_info& info);
+  std::string sql_type(const std::type_info& info);
 
   template<class ClassType>
   class sql_config {
-    static sql_table_definition table_definition;
+    static sql_table_definition table_columns;
     static std::vector<SqlField<ClassType>*> field_map;
   public:
-    static void table_name(const std::string &table_name) { table_definition.name = table_name; }
-    static const std::string &table_name() { return table_definition.name; }
+    static void table_name(const std::string &table_name) { table_columns.name = table_name; }
+    static const std::string &table_name() { return table_columns.name; }
 
-    static const sql_table_definition &table() { return table_definition; }
+    static const sql_table_definition &table() { return table_columns; }
 
     static const std::vector<SqlField<ClassType>*>& field_mapping() { return field_map; }
 
-    static std::string to_ddl() { return table_definition.to_ddl(); }
-        
+    static std::string to_ddl() { return table_columns.to_ddl(); }
+
+    static std::string select_all() { return table_columns.select_all(); };
+
     template<typename AttributeType>
     static void setPrimaryField(const std::string &columnName, AttributeType attribute) {
       using FieldType = typename Traits<AttributeType>::AttributeType;
@@ -38,8 +40,7 @@ namespace ormcxx {
         Nullable::NOT_NULL,
         ePRIMARY_KEY::PRIMARY_KEY
       };
-      table_definition.columns.push_back(column);
-
+      table_columns.columns.push_back(column);
     }
 
 
@@ -57,12 +58,12 @@ namespace ormcxx {
         nullable,
         ePRIMARY_KEY::NO_PRIMARY_KEY
       };
-      table_definition.columns.push_back(column);
+      table_columns.columns.push_back(column);
     }
   };
 
   template<typename ClassType>
-  sql_table_definition sql_config<ClassType>::table_definition;
+  sql_table_definition sql_config<ClassType>::table_columns;
   template<typename ClassType>
   std::vector<SqlField<ClassType>*> sql_config<ClassType>::field_map;
 
