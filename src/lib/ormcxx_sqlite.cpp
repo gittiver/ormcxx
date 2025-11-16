@@ -1,7 +1,9 @@
-#include "ormcxx_sqlite.hpp"
-#include <sqlite3.h>
 #include <chrono>
-#include <iostream>
+
+#include <sqlite3.h>
+
+#include "ormcxx_sqlite.hpp"
+#include "ormcxx/logging.hpp"
 
 namespace ormcxx {
   static sql_error int2error(int error);
@@ -62,6 +64,7 @@ namespace ormcxx {
     if (prepare_rc != SQLITE_OK) {
       return int2error(prepare_rc);
     } else {
+      ORMCXX_LOG_DEBUG << "execute " << sqlite3_expanded_sql(stmt);
       const auto start{std::chrono::steady_clock::now()};
       exec_rc_ = sqlite3_step(stmt);
       const auto finish{std::chrono::steady_clock::now()};

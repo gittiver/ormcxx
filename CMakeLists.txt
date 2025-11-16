@@ -35,6 +35,7 @@ GITHUB_REPOSITORY gittiver/sqlite3-amalgamation
 
 # lib
 add_library(${PROJECT_NAME}
+        src/include/ormcxx/logging.hpp src/lib/logging.cpp
         src/include/ormcxx/ormcxx_sql_config.hpp src/lib/ormcxx_sql_config.cpp
         src/lib/ormcxx_table.cpp src/include/ormcxx/ormcxx_table.hpp
         src/lib/ormcxx_sqlite.hpp src/lib/ormcxx_sqlite.cpp

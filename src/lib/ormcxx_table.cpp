@@ -2,7 +2,7 @@
 // Created by Gulliver on 07.06.25.
 //
 
-#include "../include/ormcxx/ormcxx_table.hpp"
+#include "ormcxx/ormcxx_table.hpp"
 
 namespace ormcxx {
   std::vector<std::string> sql_table_definition::primary_keys() const {
