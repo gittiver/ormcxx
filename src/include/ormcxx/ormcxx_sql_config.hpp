@@ -27,13 +27,15 @@ namespace ormcxx {
     static std::string to_ddl() { return table_columns.to_ddl(); }
 
     static std::string select_all() { return table_columns.select_all(); };
+    static std::string insert_into_values() { return table_columns.insert(); };
 
     template<typename AttributeType>
     static void setPrimaryField(const std::string &columnName, AttributeType attribute) {
       using FieldType = typename Traits<AttributeType>::AttributeType;
-      auto pField = new SqlFieldImpl<ClassType,FieldType>;
+      auto pField = new SqlFieldImpl<ClassType,FieldType>(table_columns.columns.size());
       pField->mAccessWrapper = std::make_unique<AccessWrapperAttributeImpl<ClassType,FieldType,AttributeType>>(attribute);
       field_map.push_back(pField);
+
       const sql_column_definition column{
         columnName,
         {sql_type(typeid(FieldType))},
@@ -49,9 +51,10 @@ namespace ormcxx {
                          AttributeType attribute,
                          const Nullable nullable = Nullable::NULLABLE) {
       using FieldType = typename Traits<AttributeType>::AttributeType;
-      auto pField = new SqlFieldImpl<ClassType,FieldType>;
+      auto pField = new SqlFieldImpl<ClassType,FieldType>(table_columns.columns.size());
       pField->mAccessWrapper = std::make_unique<AccessWrapperAttributeImpl<ClassType,FieldType,AttributeType>>(attribute);
       field_map.push_back(pField);
+
       const sql_column_definition column{
         columnName,
         { sql_type(typeid(FieldType))},
@@ -59,6 +62,7 @@ namespace ormcxx {
         ePRIMARY_KEY::NO_PRIMARY_KEY
       };
       table_columns.columns.push_back(column);
+
     }
   };
 

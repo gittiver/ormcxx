@@ -1,4 +1,3 @@
-
 #include <iostream>
 
 #include "catch2/catch_all.hpp"
@@ -7,9 +6,8 @@ using namespace std;
 
 using ormcxx::Database;
 
-TEST_CASE("database")
-{
-  auto db = Database::open(Database::BackendType::SQLITE,":memory:");
+TEST_CASE("database") {
+  auto db = Database::open(Database::BackendType::SQLITE, ":memory:");
 
   REQUIRE(db.has_value());
   if (db.has_value()) {
@@ -24,17 +22,16 @@ TEST_CASE("database")
     query->execute();
 
     query = db->query(
-            "INSERT INTO contacts(first_name,last_name,email,phone) VALUES (?,?,?,?)");
+      "INSERT INTO contacts(first_name,last_name,email,phone) VALUES (?,?,?,?)");
 
     std::cout << query->bindings().parameter_count() << endl;
     //query->bindings().bind_text(0,"Frank",strlen("Frank"));
-    query->bindings().bind_text(1,"Frank",strlen("Frank"));
-    query->bindings().bind_text(2,"Frank",strlen("Frank"));
-    query->bindings().bind_text(3,"Frank",strlen("Frank"));
-    query->bindings().bind_text(4,"Frank",strlen("Frank"));
+    query->bindings().bind_text(1, "Frank", strlen("Frank"));
+    query->bindings().bind_text(2, "Frank", strlen("Frank"));
+    query->bindings().bind_text(3, "Frank", strlen("Frank"));
+    query->bindings().bind_text(4, "Frank");
 
     auto result = query->execute();
-    result = query->execute();
 
     REQUIRE(result==ormcxx::sql_error::OK);
     auto query2 = db->query("SELECT * FROM contacts;");
@@ -44,11 +41,13 @@ TEST_CASE("database")
 
     REQUIRE(result==ormcxx::sql_error::OK);
     REQUIRE(query2->result().column_count()==5);
-    for (auto i = 0; i < 5; i++) {
-      std::cout << query2->result().column_name(i)<<std::endl;
+    for (auto i = 3; i < 5; i++) {
+      std::cout << query2->result().column_name(i)
+          << ":"
+          << query2->result().column_text(i - 1)
+          << std::endl;
     }
-    std::cout << query2->result().column_name(5)<<std::endl;
-
+    std::cout << query2->result().column_name(5) << std::endl;
+    std::cout << query2->result().column_text(5 - 1) << std::endl;
   }
-
 }

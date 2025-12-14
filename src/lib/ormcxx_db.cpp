@@ -30,7 +30,7 @@ namespace ormcxx {
   }
 
 
-  Database::Database(Database *pImpl_)
+  Database::Database(DatabaseImpl *pImpl_)
     : pImpl(pImpl_) {
   }
 
@@ -42,7 +42,7 @@ namespace ormcxx {
           if (!db) {
             return make_unexpected(Error::ERROR_NOT_FOUND);
           } else {
-            return Database(*db);
+            return db;
           }
         }
         break;
@@ -58,9 +58,5 @@ namespace ormcxx {
 
   expected<sql_stmt, sql_error> Database::query(const std::string &sql_string) {
     return pImpl->query(sql_string);
-  }
-
-  expected<sql_result *, Database::Error> Database::execute(const std::string &sql_string) {
-    return pImpl->execute(sql_string);
   }
 }

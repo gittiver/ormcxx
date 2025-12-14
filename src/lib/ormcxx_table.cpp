@@ -29,7 +29,7 @@ namespace ormcxx {
 
   std::string sql_table_definition::to_ddl() const {
 
-    std::string ddl = "CREATE TABLE (";
+    std::string ddl = "CREATE TABLE " + name +" (";
     bool first = true;
     for (const auto &column: columns ) {
       if (first) {
@@ -101,6 +101,17 @@ namespace ormcxx {
   std::string sql_table_definition::insert() const {
     std::string sql = "INSERT INTO ";
     sql.append(name);
+    sql.append(" (");
+    append_column_list(sql);
+    sql.append(")");
+    sql.append(" VALUES (");
+    for (auto i=0;i<columns.size();i++) {
+      if (i>0)
+        sql.append(",");
+      sql.append("?");
+    }
+    sql.append(")");
+
 
     return sql;
   }

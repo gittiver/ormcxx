@@ -14,12 +14,12 @@ namespace ormcxx {
     close();
   }
 
-  expected<Database*, Database::Error> Sqlite3Db::open(const std::string &connInfo) {
+  expected<Database, Database::Error> Sqlite3Db::open(const std::string &connInfo) {
     auto db = new Sqlite3Db();
 
     int r = sqlite3_open(connInfo.c_str(), &db->hDb);
     switch (r) {
-      case SQLITE_OK: return db;
+      case SQLITE_OK: { Database dbb(db); return dbb; }
       default: delete db;
         return tl::make_unexpected(Database::Error::ERROR_NOT_FOUND);
     }

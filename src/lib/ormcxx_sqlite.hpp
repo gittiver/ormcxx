@@ -74,14 +74,14 @@ namespace ormcxx {
         int exec_rc_;
     };
 
-    class Sqlite3Db: public Database {
+    class Sqlite3Db: public DatabaseImpl {
     private:
         sqlite3* hDb{ nullptr };
     public:
         Sqlite3Db();
         ~Sqlite3Db();
 
-        static expected<Database*,Database::Error> open(const std::string& connInfo);
+        static expected<Database,Database::Error> open(const std::string& connInfo);
 
         Error close() override;
 
