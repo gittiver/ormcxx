@@ -102,14 +102,32 @@ namespace ormcxx {
     std::string sql = "INSERT INTO ";
     sql.append(name);
     sql.append(" (");
-    append_column_list(sql);
+
+    bool first = true;
+
+    for (const auto & column : columns) {
+      //if (column.is_primary==ePRIMARY_KEY::NO_PRIMARY_KEY) {
+          if (first) {
+            first = false;
+          } else {
+            sql.append(",");
+          }
+          sql.append(column.name);
+      //}
+    };
     sql.append(")");
     sql.append(" VALUES (");
-    for (auto i=0;i<columns.size();i++) {
-      if (i>0)
-        sql.append(",");
-      sql.append("?");
-    }
+    first = true;
+    for (const auto & column : columns) {
+      //if (column.is_primary==ePRIMARY_KEY::NO_PRIMARY_KEY) {
+        if (first) {
+          first = false;
+        } else {
+          sql.append(",");
+        }
+        sql.append("?");
+      //}
+    };
     sql.append(")");
 
 

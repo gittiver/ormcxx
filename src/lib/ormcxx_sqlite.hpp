@@ -11,6 +11,7 @@ namespace ormcxx {
 
     class Sqlite3Stmt: public sql_stmt_base, private sql_bindings, private sql_result {
     public:
+        sql_error reset() override;
 
         Sqlite3Stmt(sqlite3* db);
         ~Sqlite3Stmt();
@@ -63,6 +64,9 @@ namespace ormcxx {
         const void * column_text16(size_t iCol) const override;
 
         int column_bytes(size_t iCol) const override;
+
+        int64_t last_inserted_id() const override;
+
 
         bool next_row() const override;
 

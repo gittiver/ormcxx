@@ -17,13 +17,17 @@ namespace ormcxx {
     return pImpl->execute();
   }
 
+  sql_error sql_stmt::reset() {
+    return pImpl->reset();
+  }
+
   sql_error sql_stmt::execute(const std::string &sql_string) {
     return pImpl->execute(sql_string);
   }
 
 
   sql_error sql_bindings::bind_text(size_t index, const std::string &text) {
-    return bind_text(index, text.data(), text.length());
+    return bind_text(index, text.c_str(), text.length());
   }
   const sql_result& sql_stmt::result() const {
     return pImpl->result();

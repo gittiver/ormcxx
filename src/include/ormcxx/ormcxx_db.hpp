@@ -50,7 +50,7 @@ namespace ormcxx {
         virtual const void* column_text16(size_t iCol) const = 0;
         virtual int column_bytes(size_t iCol) const = 0;
         // int sqlite3_column_type(sqlite3_stmt*, size_t iCol);bool next_row();
-
+        virtual int64_t last_inserted_id() const  = 0 ;
         virtual bool next_row() const = 0;
     };
 
@@ -63,7 +63,8 @@ namespace ormcxx {
         virtual sql_error prepare(const std::string& sql_string)=0;
         virtual sql_error execute() = 0;
         virtual sql_error execute(const std::string& sql_string)=0;
-    };
+        virtual sql_error reset() = 0;
+ };
 
     struct sql_stmt: public sql_stmt_base {
 
@@ -80,6 +81,7 @@ namespace ormcxx {
         sql_error execute(const std::string& sql_string) override;
 
         sql_error execute() override;
+        sql_error reset() override;
 
     private:
         std::unique_ptr<sql_stmt_base> pImpl;

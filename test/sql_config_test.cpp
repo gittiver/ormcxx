@@ -6,6 +6,7 @@
 #include <chrono>
 #include <type_traits>
 #include <regex>
+#include <filesystem>
 
 #include "catch2/catch_all.hpp"
 
@@ -114,11 +115,12 @@ std::vector<C> data_source<C>::select() {
 
 template<class C>
 void data_source<C>::del(const C &c) {
+
 }
 
 template<class C>
 ormcxx::sql_error data_source<C>::ins(const C &c) {
-  ormcxx::sql_error error= ormcxx::sql_error::NOK;
+  ormcxx::sql_error error=ormcxx::sql_error::NOK;
   auto query = db->query(ormcxx::sql_config<C>::insert_into_values());
   if (query) {
     for (const auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
@@ -127,6 +129,7 @@ ormcxx::sql_error data_source<C>::ins(const C &c) {
 
     }
     error = query->execute();
+    query->reset();
   }
   return error;
 }
@@ -141,17 +144,63 @@ TEST_CASE("sql_config_driver_select") {
   sql_config<C>::table_name("C");
   sql_config<C>::setPrimaryField("id", &C::id);
   sql_config<C>::setField("name", &C::name);
-
-  auto db = Database::open(Database::BackendType::SQLITE, ":memory:");
+  std::filesystem::remove("sql_config_insert.db");
+  auto db = Database::open(Database::BackendType::SQLITE, "sql_config_insert.db");
   auto ddl = sql_config<C>::to_ddl();
   db->query(ddl)->execute();
 
   db->query("INSERT INTO C(id,name) VALUES (1,'first')")->execute();
+  db->query("INSERT INTO C(id,name) VALUES (3,'third')")->execute();
+  db->query("INSERT INTO C(id,name) VALUES (2,'second')")->execute();
   if (db) {
     data_source<C> dsrc(&db.value<>());
 
     auto set = dsrc.select();
   }
+}
+
+TEST_CASE("sql_insert_parameterized") {
+  struct C {
+    int id;
+    std::string name;
+  };
+
+  sql_config<C>::table_name("C");
+  sql_config<C>::setPrimaryField("id", &C::id);
+  sql_config<C>::setField("name", &C::name);
+
+  //std::filesystem::remove("testcase.db");
+  auto db = Database::open(Database::BackendType::SQLITE, "testcase.db");
+  db->query("DROP table C;")->execute();
+  auto ddl = sql_config<C>::to_ddl();
+  db->query(ddl)->execute();
+
+  auto query = db->query("INSERT INTO C(id,name) VALUES (?,?)");
+  size_t i = 1;
+  query->bindings().bind_int(1,1);
+  query->bindings().bind_text(2,"text",strlen("text"));
+  auto result = query->execute();
+  query->reset();
+  query->bindings().bind_int(1,3);
+  query->bindings().bind_text(2,"third",strlen("third"));
+  result = query->execute();
+
+  auto query2 = db->query("INSERT INTO C(name) VALUES (?)");
+  query2->bindings().bind_text(1,"third",strlen("third"));
+  result = query2->execute();
+  query2->reset();
+  int newId = query2->result().last_inserted_id();
+
+  result = query2->execute();
+  query2->reset();
+
+  newId = query2->result().last_inserted_id();
+  std::string name = "std::string";
+  query2->bindings().bind_text(1,name);
+  result = query2->execute();
+  newId = query2->result().last_inserted_id();
+
+
 }
 
 TEST_CASE("sql_config_insert") {
@@ -164,9 +213,12 @@ TEST_CASE("sql_config_insert") {
   sql_config<C>::setPrimaryField("id", &C::id);
   sql_config<C>::setField("name", &C::name);
 
-  auto db = Database::open(Database::BackendType::SQLITE, ":memory:");
+  auto db = Database::open(Database::BackendType::SQLITE, "testcase.db");//":memory:");
+
+  db->query("DROP table C;")->execute();
   auto ddl = sql_config<C>::to_ddl();
   db->query(ddl)->execute();
+
   data_source<C> dsrc(&db.value<>());
   C c;
   c.id = 2;

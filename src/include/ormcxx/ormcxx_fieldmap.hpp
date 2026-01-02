@@ -80,6 +80,7 @@ namespace ormcxx {
   }
 
   inline sql_error bindVariable(sql_bindings& bindings, size_t column, const std::string* const from) {
+
     return bindings.bind_text(column, *from);
   }
 
@@ -121,6 +122,7 @@ namespace ormcxx {
 
       FieldType t{};
       mAccessWrapper->get(instance,&t);
+      // TBD this is definitely wrong, we have to know to which binding parameter we have to bind
       bindVariable(b,this->column()+1,&t);
       std::cout << "bind " << typeid(instance).name() << ":" << this->column() << std::endl;
     }
