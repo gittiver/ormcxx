@@ -20,9 +20,10 @@ using ormcxx::sql_config;
 
 TEST_CASE("sql_table_definition") {
   using ormcxx::sql_table_definition;
-  const std::string expected_result = "CREATE TABLE (id int, name1 type1 NOT NULL, PRIMARY KEY(id))";
+  const std::string expected_result = "CREATE TABLE C (id int, name1 type1 NOT NULL, PRIMARY KEY(id))";
 
   sql_table_definition table;
+  table.name = "C";
   table.columns.push_back({"id", {"int"}, ormcxx::Nullable::NULLABLE, ormcxx::ePRIMARY_KEY::PRIMARY_KEY});
   table.columns.push_back({"name1", {"type1"}, ormcxx::Nullable::NOT_NULL, ormcxx::ePRIMARY_KEY::NO_PRIMARY_KEY});
 
@@ -76,7 +77,7 @@ TEST_CASE("sql_config_table_map") {
 
   REQUIRE(sql_config<C>::table().primary_keys()==std::vector<std::string>({"id"}));
 
-  REQUIRE(sql_config<C>::to_ddl()=="CREATE TABLE (id INTEGER NOT NULL, name VARCHAR, PRIMARY KEY(id))");
+  REQUIRE(sql_config<C>::to_ddl()=="CREATE TABLE C (id INTEGER NOT NULL, name VARCHAR, PRIMARY KEY(id))");
 }
 
 template<class C>
