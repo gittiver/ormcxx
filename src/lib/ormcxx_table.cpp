@@ -77,24 +77,48 @@ namespace ormcxx {
     return sql;
   }
 
-  std::string sql_table_definition::update_by_id() const {
-    std::string sql = "UPDATE ";
-
-    sql.append(" WHERE ");
-    for (auto pkey : primary_keys()) {
-      sql.append(pkey).append("= ?");
-    }
-    return sql;
-  }
-
   std::string sql_table_definition::delete_by_id() const {
     std::string sql = "DELETE FROM  ";
     sql.append(name)
         .append(" WHERE ");
-    for (auto pkey : primary_keys()) {
-      sql.append(pkey).append("= ?");
+    bool first = false;
+    for (auto const & pkey : primary_keys()) {
+      if (first) {
+        first = false;
+      } else {
+        sql.append(pkey).append("= ?");
+      }
     };
     sql.append(";");
+    return sql;
+  }
+
+  std::string sql_table_definition::update_by_id() const {
+    std::string sql = "UPDATE ";
+    sql.append(name).append(" SET ");
+    std::string where;
+    bool first = true;
+
+    for (auto const & col : columns) {
+      if (col.is_primary==ePRIMARY_KEY::PRIMARY_KEY) {
+        if (where.empty()) {
+        } else {
+          where.append(" AND ");
+        }
+        where.append(col.name).append("= ?");
+
+      } else {
+        if (first) {
+          first = false;
+        } else {
+          sql.append(",");
+        }
+        sql.append(col.name).append("= ?");
+
+      }
+
+    };
+    sql.append(" WHERE ").append(where).append(";");
     return sql;
   }
 

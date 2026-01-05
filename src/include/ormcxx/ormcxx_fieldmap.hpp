@@ -98,7 +98,7 @@ namespace ormcxx {
     [[nodiscard]] size_t column() const { return m_column; }
     /* Reads the data at the corresponding column from <i>driver</i> and inject it in <i>instance</i> using its setter method. */
     virtual void readFromResult(const ormcxx::sql_result& result,ClassType* instance) = 0;
-    virtual void writeToBindings(ormcxx::sql_bindings& sql_query,const ClassType* instance) = 0;
+    virtual void writeToBindings(ormcxx::sql_bindings& sql_query,const ClassType* instance, size_t param_index) = 0;
 
   };
 
@@ -118,13 +118,13 @@ namespace ormcxx {
 
       mAccessWrapper->set(instance, &t);
     }
-    void writeToBindings(ormcxx::sql_bindings& b,const ClassType* instance) {
+    void writeToBindings(ormcxx::sql_bindings& b,const ClassType* instance, size_t param_index) {
 
       FieldType t{};
       mAccessWrapper->get(instance,&t);
       // TBD this is definitely wrong, we have to know to which binding parameter we have to bind
-      bindVariable(b,this->column()+1,&t);
-      std::cout << "bind " << typeid(instance).name() << ":" << this->column() << std::endl;
+      bindVariable(b,param_index,&t);
+      std::cout << "bind " << typeid(instance).name() << ":" << param_index << std::endl;
     }
   };
 

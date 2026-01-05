@@ -86,13 +86,15 @@ struct data_source {
 
   std::vector<C> select();
 
-  void del(const C &c);
+  ormcxx::sql_error delete_by_id(const C &c);
+  ormcxx::sql_error update_by_id(const C &c);
 
-  ormcxx::sql_error ins(const C &c);
+  ormcxx::sql_error insert(const C &c);
 
   data_source(ormcxx::Database *db) : db(db) {
   };
 
+  virtual ~data_source()=default;
   Database *db;
 };
 
@@ -104,7 +106,7 @@ std::vector<C> data_source<C>::select() {
     while (query_result->result().next_row()) {
       C c;
       for (auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
-        cout << mapped_field->column() << endl;
+        // cout << mapped_field->column() << endl;
         mapped_field->readFromResult(query_result->result(), &c);
       }
       // TBD sql_config map
@@ -115,18 +117,55 @@ std::vector<C> data_source<C>::select() {
 }
 
 template<class C>
-void data_source<C>::del(const C &c) {
-
+ormcxx::sql_error data_source<C>::delete_by_id(const C &c) {
+  ormcxx::sql_error error=ormcxx::sql_error::NOK;
+  auto query = db->query(ormcxx::sql_config<C>::table().delete_by_id());
+  if (query) {
+    size_t i = 1;
+    for (const auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
+      if (ormcxx::sql_config<C>::table().columns[mapped_field->column()].is_primary == ormcxx::ePRIMARY_KEY::PRIMARY_KEY) {
+        mapped_field->writeToBindings(query->bindings(), &c,i++);
+      }
+    }
+    error = query->execute();
+    query->reset();
+  }
+  return error;
 }
 
 template<class C>
-ormcxx::sql_error data_source<C>::ins(const C &c) {
+ormcxx::sql_error data_source<C>::update_by_id(const C &c) {
+  ormcxx::sql_error error=ormcxx::sql_error::NOK;
+  auto query = db->query(ormcxx::sql_config<C>::table().update_by_id());
+  if (query) {
+    size_t i = 1;
+
+    for (const auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
+      auto col = ormcxx::sql_config<C>::table().columns[mapped_field->column()];
+      if (col.is_primary != ormcxx::ePRIMARY_KEY::PRIMARY_KEY) {
+        mapped_field->writeToBindings(query->bindings(), &c,i++);
+      }
+    }
+    for (const auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
+      auto col = ormcxx::sql_config<C>::table().columns[mapped_field->column()];
+      if (col.is_primary == ormcxx::ePRIMARY_KEY::PRIMARY_KEY) {
+        mapped_field->writeToBindings(query->bindings(), &c,i++);
+      }
+    }
+    error = query->execute();
+    query->reset();
+  }
+  return error;
+}
+
+template<class C>
+ormcxx::sql_error data_source<C>::insert(const C &c) {
   ormcxx::sql_error error=ormcxx::sql_error::NOK;
   auto query = db->query(ormcxx::sql_config<C>::insert_into_values());
   if (query) {
     for (const auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
       cout << mapped_field->column() << endl;
-      mapped_field->writeToBindings(query->bindings(), &c);
+      mapped_field->writeToBindings(query->bindings(), &c,mapped_field->column()+1);
 
     }
     error = query->execute();
@@ -145,8 +184,7 @@ TEST_CASE("sql_config_driver_select") {
   sql_config<C>::table_name("C");
   sql_config<C>::setPrimaryField("id", &C::id);
   sql_config<C>::setField("name", &C::name);
-  std::filesystem::remove("sql_config_insert.db");
-  auto db = Database::open(Database::BackendType::SQLITE, "sql_config_insert.db");
+  auto db = Database::open(Database::BackendType::SQLITE, ":memory:");
   auto ddl = sql_config<C>::to_ddl();
   db->query(ddl)->execute();
 
@@ -171,8 +209,8 @@ TEST_CASE("sql_insert_parameterized") {
   sql_config<C>::setField("name", &C::name);
 
   //std::filesystem::remove("testcase.db");
-  auto db = Database::open(Database::BackendType::SQLITE, "testcase.db");
-  db->query("DROP table C;")->execute();
+  auto db = Database::open(Database::BackendType::SQLITE, "test.db");
+  db->query("DROP table  IF EXISTS C;")->execute();
   auto ddl = sql_config<C>::to_ddl();
   db->query(ddl)->execute();
 
@@ -200,8 +238,6 @@ TEST_CASE("sql_insert_parameterized") {
   query2->bindings().bind_text(1,name);
   result = query2->execute();
   newId = query2->result().last_inserted_id();
-
-
 }
 
 TEST_CASE("sql_config_insert") {
@@ -214,9 +250,9 @@ TEST_CASE("sql_config_insert") {
   sql_config<C>::setPrimaryField("id", &C::id);
   sql_config<C>::setField("name", &C::name);
 
-  auto db = Database::open(Database::BackendType::SQLITE, "testcase.db");//":memory:");
+  auto db = Database::open(Database::BackendType::SQLITE, ":memory:");
 
-  db->query("DROP table C;")->execute();
+  db->query("DROP table IF EXISTS C;")->execute();
   auto ddl = sql_config<C>::to_ddl();
   db->query(ddl)->execute();
 
@@ -224,10 +260,10 @@ TEST_CASE("sql_config_insert") {
   C c;
   c.id = 2;
   c.name = "second";
-  auto error = dsrc.ins(c);
+  auto error = dsrc.insert(c);
   c.id= 3 ;
   c.name = "third";
-  error = dsrc.ins(c);
+  error = dsrc.insert(c);
 
   auto set = dsrc.select();
 
@@ -240,4 +276,49 @@ TEST_CASE("sql_config_insert") {
 
   REQUIRE(set[1].id==3);
   REQUIRE(set[1].name=="third");
+}
+
+
+TEST_CASE("sql_update_by_id") {
+  struct C {
+    int id;
+    std::string name;
+  };
+
+  sql_config<C>::table_name("C");
+  sql_config<C>::setPrimaryField("id", &C::id);
+  sql_config<C>::setField("name", &C::name);
+
+  auto db = Database::open(Database::BackendType::SQLITE, ":memory:");
+
+  db->query("DROP table  IF EXISTS C;")->execute();
+  auto ddl = sql_config<C>::to_ddl();
+  db->query(ddl)->execute();
+
+  data_source<C> dsrc(&db.value<>());
+  C c;
+  c.id = 2;
+  c.name = "second";
+  auto error = dsrc.insert(c);
+  REQUIRE(error==ormcxx::sql_error::OK);
+  c.id= 3 ;
+  c.name = "third";
+  error = dsrc.insert(c);
+  REQUIRE(error==ormcxx::sql_error::OK);
+
+
+  C update_item = c;
+  update_item.name = "updated_third";
+  error = dsrc.update_by_id(update_item);
+  REQUIRE(error==ormcxx::sql_error::OK);
+
+  auto set = dsrc.select();
+
+  REQUIRE(set.size()==2);
+
+  REQUIRE(set[0].id==2);
+  REQUIRE(set[0].name=="second");
+
+  REQUIRE(set[1].id==3);
+  REQUIRE(set[1].name=="updated_third");
 }
