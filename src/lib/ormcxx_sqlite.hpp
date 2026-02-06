@@ -11,7 +11,6 @@ namespace ormcxx {
 
     class Sqlite3Stmt: public sql_stmt_base, private sql_bindings, private sql_result {
     public:
-
         Sqlite3Stmt(sqlite3* db);
         ~Sqlite3Stmt();
         sql_error prepare(const std::string &sql_string) override;
@@ -23,7 +22,7 @@ namespace ormcxx {
         sql_error execute() override;
         sql_error execute(const std::string &sql_string) override;
 
-
+        sql_error_report last_error() override;
     private:
         size_t parameter_count() override;
 
@@ -70,8 +69,8 @@ namespace ormcxx {
         friend class Sqlite3Db;
         sqlite3* db_;
         sqlite3_stmt* stmt;
-        int prepare_rc;
-        int exec_rc_;
+        int last_rc;
+    //    int exec_rc_;
     };
 
     class Sqlite3Db: public Database {

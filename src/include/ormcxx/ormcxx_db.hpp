@@ -16,6 +16,11 @@ namespace ormcxx {
 
     enum class sql_error: int {OK, NOK};
 
+    struct sql_error_report {
+        int error_code;
+        std::string message;
+    };
+
     struct sql_bindings {
 
         virtual ~sql_bindings() = default;
@@ -63,6 +68,7 @@ namespace ormcxx {
         virtual sql_error prepare(const std::string& sql_string)=0;
         virtual sql_error execute() = 0;
         virtual sql_error execute(const std::string& sql_string)=0;
+        virtual sql_error_report last_error() = 0;
     };
 
     struct sql_stmt: public sql_stmt_base {
@@ -80,6 +86,7 @@ namespace ormcxx {
         sql_error execute(const std::string& sql_string) override;
 
         sql_error execute() override;
+        sql_error_report last_error() override;
     private:
         std::unique_ptr<sql_stmt_base> pImpl;
 

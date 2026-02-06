@@ -46,32 +46,31 @@ namespace ormcxx {
   Sqlite3Stmt::Sqlite3Stmt(sqlite3 *db)
     : db_(db),
       stmt(nullptr),
-      prepare_rc(SQLITE_ERROR),
-      exec_rc_(SQLITE_ERROR) {
+      last_rc(SQLITE_ERROR) {
   }
 
   Sqlite3Stmt::~Sqlite3Stmt() { sqlite3_finalize(stmt); }
 
 
   sql_error Sqlite3Stmt::prepare(const std::string &sql_string) {
-    prepare_rc = sqlite3_prepare_v2(db_, sql_string.data(), sql_string.length(), &stmt, nullptr);
-    return status2error(prepare_rc);
+    last_rc = sqlite3_prepare_v2(db_, sql_string.data(), sql_string.length(), &stmt, nullptr);
+    return status2error(last_rc);
   }
 
   sql_error Sqlite3Stmt::execute() {
-    if (prepare_rc != SQLITE_OK) {
-      return status2error(prepare_rc);
+    if (last_rc != SQLITE_OK) {
+      return status2error(last_rc);
     } else {
       const auto start{std::chrono::steady_clock::now()};
-      exec_rc_ = sqlite3_step(stmt);
+      last_rc = sqlite3_step(stmt);
       const auto finish{std::chrono::steady_clock::now()};
       std::chrono::duration<double> duration = finish - start;
       std::cout << duration.count() << std::endl;
-      switch (exec_rc_) {
+      switch (last_rc) {
         case SQLITE_ROW:
         case SQLITE_DONE:
         case SQLITE_OK: return sql_error::OK;
-        default: return status2error(exec_rc_);
+        default: return status2error(last_rc);
       }
     }
   }
@@ -84,7 +83,6 @@ namespace ormcxx {
       return execute();
     }
   }
-
 
   static sql_error status2error(int error) {
     switch (error) {
@@ -187,4 +185,11 @@ namespace ormcxx {
   sql_error Sqlite3Stmt::bind_text16(size_t index, const void *zText16, size_t len) {
     return status2error(sqlite3_bind_text16(stmt, index, zText16, len, nullptr));
   }
-};
+
+  sql_error_report Sqlite3Stmt::last_error() {
+    sql_error_report err{ last_rc,
+      sqlite3_errmsg(db_)};
+    return err;
+  }
+
+}

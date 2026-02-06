@@ -17,6 +17,10 @@ namespace ormcxx {
     return pImpl->execute();
   }
 
+  sql_error_report sql_stmt::last_error() {
+    return pImpl->last_error();
+  }
+
   sql_error sql_stmt::execute(const std::string &sql_string) {
     return pImpl->execute(sql_string);
   }

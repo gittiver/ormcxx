@@ -169,7 +169,6 @@ namespace ormcxx {
       return false;
   }
 
-
   // sql_bindings for sqlite3
   size_t PostgresStmt::parameter_count() {
     return PQnparams(res_describe_prepared);
@@ -209,5 +208,10 @@ namespace ormcxx {
 
   sql_error PostgresStmt::bind_text16(size_t index, const void *zText16, size_t len) {
     return sql_error::NOK;
+  }
+
+  sql_error_report PostgresStmt::last_error() {
+    sql_error_report err { PQresultStatus(res), PQerrorMessage(db_)};
+    return err;
   }
 };

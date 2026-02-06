@@ -10,6 +10,8 @@ namespace ormcxx {
                        private sql_result {
     friend class PostgresDb;
     pg_conn *db_;
+
+  private:
     const char *stmt;
     int prepare_rc;
     int exec_rc_;
@@ -72,6 +74,9 @@ namespace ormcxx {
     int column_bytes(size_t iCol) const override;
 
     bool next_row() override;
+  public:
+    sql_error_report last_error() override;
+
   };
 
   class PostgresDb : public Database {

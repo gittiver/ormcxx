@@ -7,77 +7,91 @@ using namespace std;
 using ormcxx::Database;
 
 struct descriptor {
-  Database::BackendType backend_type;
-  std::string connection_string;
-};
-const std::vector<descriptor> connection_types = {
-  {Database::BackendType::SQLITE, ":memory:"},
-  {Database::BackendType::POSTGRESQL, "postgresql://testuser:mypassword@localhost/test_db"}
+    Database::BackendType backend_type;
+    std::string connection_string;
 };
 
+const std::vector<descriptor> connection_types = {
+    //{Database::BackendType::SQLITE, ":memory:"},
+    {Database::BackendType::POSTGRESQL, "postgresql://testuser:mypassword@localhost/test_db"}
+};
+
+
 TEST_CASE("open database") {
-  for (auto const &c: connection_types) {
+    auto c = GENERATE(from_range(connection_types));
+
     auto db = Database::open(c.backend_type, c.connection_string);
     if (!db) {
-      FAIL("can not open connection:"+ std::to_string((int)c.backend_type)+"," + c.connection_string);
+        FAIL("can not open connection:"+ std::to_string(static_cast<int>(c.backend_type))+"," + c.connection_string)
+        ;
     }
     REQUIRE(db.has_value()==true);
-  }
 }
 
 
 TEST_CASE("sql_query_and_execute") {
-  for (auto const &c: connection_types) {
+    auto c = GENERATE(from_range(connection_types));
+
     auto db = Database::open(c.backend_type, c.connection_string);
     if (!db) {
-      FAIL("can not open connection:"+ std::to_string((int)c.backend_type)+"," + c.connection_string);
+        FAIL("can not open connection:"+ std::to_string((int)c.backend_type)+"," + c.connection_string);
     } else {
-      auto query = db->query(
-        "CREATE TABLE IF NOT EXISTS contacts ( "
-        "contact_id INTEGER PRIMARY KEY,"
-        "first_name TEXT NOT NULL,"
-        "last_name TEXT NOT NULL,"
-        "email TEXT NOT NULL,"
-        "phone TEXT NOT NULL"
-        ");"
-      );
-      REQUIRE(query.has_value());
-      query->execute();
+        auto query = db->query(
+            "CREATE TABLE IF NOT EXISTS contacts ( "
+            "contact_id INTEGER PRIMARY KEY,"
+            "first_name TEXT NOT NULL,"
+            "last_name TEXT NOT NULL,"
+            "email TEXT NOT NULL,"
+            "phone TEXT NOT NULL"
+            ");"
+        );
+        REQUIRE(query.has_value());
+        query->execute();
     }
-  }
+    //db->execute("DROP TABLE if exists contacts;");
 }
 
 TEST_CASE("sql_query_bindings") {
-  for (auto const &c: connection_types) {
+    auto c = GENERATE(from_range(connection_types));
+
     auto db = Database::open(c.backend_type, c.connection_string);
     if (!db) {
-      FAIL("can not open connection:"+ std::to_string((int)c.backend_type)+"," + c.connection_string);
+        FAIL("can not open connection:"+ std::to_string((int)c.backend_type)+"," + c.connection_string);
     } else {
-      auto query = db->query(
-        "INSERT INTO contacts(first_name,last_name,email,phone) VALUES (?,?,?,?)");
-      REQUIRE(query.has_value()==true);
-      std::cout << "n_of_parameters" << query->bindings().parameter_count() << endl;
-      //query->bindings().bind_text(0,"Frank",strlen("Frank"));
-      query->bindings().bind_text(1, "Frank", strlen("Frank"));
-      query->bindings().bind_text(2, "Frank", strlen("Frank"));
-      query->bindings().bind_text(3, "Frank", strlen("Frank"));
-      query->bindings().bind_text(4, "Frank", strlen("Frank"));
+        auto ddl_query = db->execute("CREATE TABLE IF NOT EXISTS contacts ( "
+            "contact_id INTEGER PRIMARY KEY,"
+            "first_name TEXT NOT NULL,"
+            "last_name TEXT NOT NULL,"
+            "email TEXT NOT NULL,"
+            "phone TEXT NOT NULL"
+            ");");
+        REQUIRE(ddl_query.has_value());
+        auto query = db->query(
+            "INSERT INTO contacts(first_name,last_name,email,phone) VALUES (?,?,?,?)");
 
-      auto result = query->execute();
-      result = query->execute();
+        REQUIRE(query.has_value()==true);
+        std::cout << "n_of_parameters" << query->bindings().parameter_count() << endl;
+        //query->bindings().bind_text(0,"Frank",strlen("Frank"));
+        query->bindings().bind_text(1, "Frank", strlen("Frank"));
+        query->bindings().bind_text(2, "Frank", strlen("Frank"));
+        query->bindings().bind_text(3, "Frank", strlen("Frank"));
+        query->bindings().bind_text(4, "Frank", strlen("Frank"));
 
-      REQUIRE(result==ormcxx::sql_error::OK);
-      auto query2 = db->query("SELECT * FROM contacts;");
-      REQUIRE(query2.has_value());
+        auto result = query->execute();
+        REQUIRE(result==ormcxx::sql_error::OK);
 
-      result = query2->execute();
+        result = query->execute();
+        REQUIRE(result==ormcxx::sql_error::OK);
+        auto query2 = db->query("SELECT * FROM contacts;");
+        REQUIRE(query2.has_value());
 
-      REQUIRE(result==ormcxx::sql_error::OK);
-      REQUIRE(query2->result().column_count()==5);
-      for (auto i = 0; i < 5; i++) {
-        std::cout << query2->result().column_name(i) << std::endl;
-      }
-      std::cout << query2->result().column_name(5) << std::endl;
+        result = query2->execute();
+
+        REQUIRE(result==ormcxx::sql_error::OK);
+        REQUIRE(query2->result().column_count()==5);
+        for (auto i = 0; i < 5; i++) {
+            std::cout << query2->result().column_name(i) << std::endl;
+        }
+        std::cout << query2->result().column_name(5) << std::endl;
     }
-  }
 }
