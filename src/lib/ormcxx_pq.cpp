@@ -102,6 +102,14 @@ namespace ormcxx {
     }
   }
 
+  int64_t PostgresStmt::last_inserted_id() const {
+    return 0; /// TODO
+  }
+
+  sql_error PostgresStmt::reset() {
+    return sql_error::OK;
+  }
+
 
   static sql_error status2error(int error) {
     switch (error) {
@@ -159,7 +167,7 @@ namespace ormcxx {
     return PQgetlength(res, row, iCol);
   }
 
-  bool PostgresStmt::next_row() {
+  bool PostgresStmt::next_row()  {
     char *pszTuples = PQcmdTuples(res);
     long long tuples = atoll(pszTuples);
     if (row < tuples - 1) {

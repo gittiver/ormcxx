@@ -51,7 +51,7 @@ namespace ormcxx {
         virtual int column_bytes(size_t iCol) const = 0;
         // int sqlite3_column_type(sqlite3_stmt*, size_t iCol);bool next_row();
         virtual int64_t last_inserted_id() const  = 0 ;
-        virtual bool next_row() const = 0;
+        virtual bool next_row() = 0;
     };
 
     struct sql_stmt_base {
@@ -65,7 +65,7 @@ namespace ormcxx {
         virtual sql_error execute() = 0;
         virtual sql_error execute(const std::string& sql_string)=0;
         virtual sql_error reset() = 0;
- };
+    };
 
     struct sql_stmt: public sql_stmt_base {
 
@@ -94,7 +94,7 @@ namespace ormcxx {
             SQLITE,
         //    ODBC,
         //    MARIA_DB,
-        //    POSTGRESQL
+            POSTGRESQL
         };
 
         static Driver* instance(BackendType backend);

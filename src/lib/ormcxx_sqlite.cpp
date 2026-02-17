@@ -138,7 +138,7 @@ namespace ormcxx {
   }
 
 
-  bool Sqlite3Stmt::next_row() const {
+  bool Sqlite3Stmt::next_row() {
     return sqlite3_step(stmt) == SQLITE_ROW;
   }
 
@@ -183,7 +183,7 @@ namespace ormcxx {
     return status2error(sqlite3_bind_null(stmt, index));
   }
 
-  sql_error Sqlite3Stmt::bind_text(size_t index, const char *zText, int n) {
+  sql_error Sqlite3Stmt::bind_text(size_t index, const char *zText, size_t n) {
     return status2error(sqlite3_bind_text(stmt, index, zText, n, SQLITE_TRANSIENT));
   }
 

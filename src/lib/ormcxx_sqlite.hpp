@@ -18,7 +18,7 @@ namespace ormcxx {
         sql_error prepare(const std::string &sql_string) override;
 
         sql_bindings& bindings() override { return *this; }
-        sql_result& result() { return *this; }
+        sql_result& result() override { return *this; }
         const sql_result & result() const override { return *this; }
 
         sql_error execute() override;
@@ -68,7 +68,7 @@ namespace ormcxx {
         int64_t last_inserted_id() const override;
 
 
-        bool next_row() const override;
+        bool next_row() override;
 
         friend class Sqlite3Db;
         sqlite3* db_;

@@ -8,6 +8,7 @@ namespace ormcxx {
   class PostgresStmt : public sql_stmt_base,
                        private sql_bindings,
                        private sql_result {
+  private:
     friend class PostgresDb;
     pg_conn *db_;
     const char *stmt;
@@ -19,17 +20,22 @@ namespace ormcxx {
   public:
     PostgresStmt(pg_conn *db);
 
-    ~PostgresStmt();
+    ~PostgresStmt() override;
 
     sql_error prepare(const std::string &sql_string) override;
 
     sql_bindings &bindings() override { return *this; }
-    sql_result &result() { return *this; }
+    sql_result &result() override { return *this; }
     const sql_result &result() const override { return *this; }
 
     sql_error execute() override;
 
     sql_error execute(const std::string &sql_string) override;
+
+    int64_t last_inserted_id() const override;
+
+    sql_error reset() override;
+
 
   private:
     size_t parameter_count() override;
