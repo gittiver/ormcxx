@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <iostream>
+#include "ormcxx/ormcxx_db.hpp"
 
 namespace ormcxx {
 
@@ -57,26 +58,74 @@ namespace ormcxx {
     }
   };
 
+  inline void result2Variable(const sql_result& sql_result, size_t column, int* to) {
+    *to = sql_result.column_int(column);
+  }
+
+  inline void result2Variable(const sql_result& sql_result, size_t column, std::string* to) {
+    const char* text = reinterpret_cast<const char*>(sql_result.column_text(column));
+    (*to) = text !=nullptr ? text:"";
+  }
+
+  inline void result2Variable(const sql_result& sql_result, size_t column, float* to) {
+    *to = sql_result.column_double(column);
+  }
+
+  inline void result2Variable(const sql_result& sql_result, size_t column, double* to) {
+    *to = sql_result.column_double(column);
+  }
+
+  inline sql_error bindVariable(sql_bindings& bindings, size_t column, int* from) {
+    return bindings.bind_int(column, *from);
+  }
+
+  inline sql_error bindVariable(sql_bindings& bindings, size_t column, const std::string* const from) {
+
+    return bindings.bind_text(column, *from);
+  }
+
+  inline sql_error bindVariable(sql_bindings& bindings, size_t column, double* from) {
+    return bindings.bind_double(column, *from);
+  }
+
   template<typename ClassType>
   class SqlField {
+    size_t m_column;
   public:
+    explicit SqlField(size_t column) : m_column(column) {}
+    virtual ~SqlField() = default;
+
+    [[nodiscard]] size_t column() const { return m_column; }
     /* Reads the data at the corresponding column from <i>driver</i> and inject it in <i>instance</i> using its setter method. */
-    virtual void readFromDriver(ClassType* instance, int column) = 0;
+    virtual void readFromResult(const ormcxx::sql_result& result,ClassType* instance) = 0;
+    virtual void writeToBindings(ormcxx::sql_bindings& sql_query,const ClassType* instance, size_t param_index) = 0;
 
   };
 
   template<typename ClassType, typename FieldType>
   class SqlFieldImpl : public SqlField<ClassType> {
   public:
-    std::unique_ptr<AccessWrapper<ClassType, FieldType>> mAccessWrapper;
-    void readFromDriver(ClassType* instance, int columnIndex) {
-      FieldType t{};
-      std::cout << "read " << typeid(instance).name() << ":" << columnIndex << std::endl;
-
-      //Utility::driverToVariable(SqlEntityConfigurer<ClassType>::driver(), columnIndex, Utility::initializeInstance(&t));
-      mAccessWrapper->set(instance, &t);
+    explicit SqlFieldImpl(size_t column)
+      : SqlField<ClassType>(column) {
     }
 
+    std::unique_ptr<AccessWrapper<ClassType, FieldType>> mAccessWrapper;
+    void readFromResult(const ormcxx::sql_result& result,ClassType* instance) {
+      FieldType t{};
+      std::cout << "read " << typeid(instance).name() << ":" << this->column() << std::endl;
+      result2Variable(result,this->column(),&t);
+      std::cout << "read value " << t << std::endl;
+
+      mAccessWrapper->set(instance, &t);
+    }
+    void writeToBindings(ormcxx::sql_bindings& b,const ClassType* instance, size_t param_index) {
+
+      FieldType t{};
+      mAccessWrapper->get(instance,&t);
+      // TBD this is definitely wrong, we have to know to which binding parameter we have to bind
+      bindVariable(b,param_index,&t);
+      std::cout << "bind " << typeid(instance).name() << ":" << param_index << std::endl;
+    }
   };
 
 

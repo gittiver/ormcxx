@@ -14,12 +14,12 @@ namespace ormcxx {
     close();
   }
 
-  expected<Database*, Database::Error> Sqlite3Db::open(const std::string &connInfo) {
+  expected<Database, Database::Error> Sqlite3Db::open(const std::string &connInfo) {
     auto db = new Sqlite3Db();
 
     int r = sqlite3_open(connInfo.c_str(), &db->hDb);
     switch (r) {
-      case SQLITE_OK: return db;
+      case SQLITE_OK: { Database dbb(db); return dbb; }
       default: delete db;
         return tl::make_unexpected(Database::Error::ERROR_NOT_FOUND);
     }
@@ -62,11 +62,11 @@ namespace ormcxx {
     if (prepare_rc != SQLITE_OK) {
       return int2error(prepare_rc);
     } else {
-      const auto start{std::chrono::steady_clock::now()};
+      //const auto start{std::chrono::steady_clock::now()};
       exec_rc_ = sqlite3_step(stmt);
-      const auto finish{std::chrono::steady_clock::now()};
-      std::chrono::duration<double> duration = finish - start;
-      std::cout << duration.count() << std::endl;
+      //const auto finish{std::chrono::steady_clock::now()};
+      //std::chrono::duration<double> duration = finish - start;
+      //std::cout << duration.count() << std::endl;
       switch (exec_rc_) {
         case SQLITE_ROW:
         case SQLITE_DONE:
@@ -133,6 +133,11 @@ namespace ormcxx {
     return sqlite3_column_bytes(stmt, iCol);
   }
 
+  int64_t Sqlite3Stmt::last_inserted_id() const {
+    return sqlite3_last_insert_rowid(db_);
+  }
+
+
   bool Sqlite3Stmt::next_row() const {
     return sqlite3_step(stmt) == SQLITE_ROW;
   }
@@ -180,11 +185,15 @@ namespace ormcxx {
 
 
   sql_error Sqlite3Stmt::bind_text(size_t index, const char *zText, int n) {
-    return int2error(sqlite3_bind_text(stmt, index, zText, n, nullptr));
+    return int2error(sqlite3_bind_text(stmt, index, zText, n, SQLITE_TRANSIENT));
   }
 
 
   sql_error Sqlite3Stmt::bind_text16(size_t index, const void *zText16, int n) {
     return int2error(sqlite3_bind_text16(stmt, index, zText16, n, nullptr));
+  }
+
+  sql_error Sqlite3Stmt::reset() {
+    return int2error(sqlite3_reset(stmt));
   }
 };

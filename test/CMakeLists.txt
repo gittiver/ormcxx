@@ -7,7 +7,7 @@ set(CMAKE_POLICY_WARNING_CMP0126 new)
 enable_testing()
 
 set(TEST_SRCS
-        unittest.cpp
+        sql_config_test.cpp
         db_test.cpp
 )
 

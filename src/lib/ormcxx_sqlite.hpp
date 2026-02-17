@@ -11,6 +11,7 @@ namespace ormcxx {
 
     class Sqlite3Stmt: public sql_stmt_base, private sql_bindings, private sql_result {
     public:
+        sql_error reset() override;
 
         Sqlite3Stmt(sqlite3* db);
         ~Sqlite3Stmt();
@@ -64,6 +65,9 @@ namespace ormcxx {
 
         int column_bytes(size_t iCol) const override;
 
+        int64_t last_inserted_id() const override;
+
+
         bool next_row() const override;
 
 
@@ -74,14 +78,14 @@ namespace ormcxx {
         int exec_rc_;
     };
 
-    class Sqlite3Db: public Database {
+    class Sqlite3Db: public DatabaseImpl {
     private:
         sqlite3* hDb{ nullptr };
     public:
         Sqlite3Db();
         ~Sqlite3Db();
 
-        static expected<Database*,Database::Error> open(const std::string& connInfo);
+        static expected<Database,Database::Error> open(const std::string& connInfo);
 
         Error close() override;
 

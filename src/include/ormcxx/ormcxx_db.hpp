@@ -8,6 +8,7 @@
 #include <tl/expected.hpp>
 #include <string>
 #include <memory>
+#include <map>
 
 namespace ormcxx {
 
@@ -49,7 +50,7 @@ namespace ormcxx {
         virtual const void* column_text16(size_t iCol) const = 0;
         virtual int column_bytes(size_t iCol) const = 0;
         // int sqlite3_column_type(sqlite3_stmt*, size_t iCol);bool next_row();
-
+        virtual int64_t last_inserted_id() const  = 0 ;
         virtual bool next_row() const = 0;
     };
 
@@ -62,14 +63,15 @@ namespace ormcxx {
         virtual sql_error prepare(const std::string& sql_string)=0;
         virtual sql_error execute() = 0;
         virtual sql_error execute(const std::string& sql_string)=0;
-    };
+        virtual sql_error reset() = 0;
+ };
 
     struct sql_stmt: public sql_stmt_base {
 
         explicit sql_stmt(sql_stmt_base* pImpl_);
         sql_stmt(sql_stmt&&) = default;
         sql_stmt(const sql_stmt&) = delete;
-        ~sql_stmt() = default;
+        ~sql_stmt() override = default;
 
         sql_stmt& operator=(sql_stmt&&) = default;
         sql_stmt& operator=(const sql_stmt&) = delete;
@@ -79,19 +81,43 @@ namespace ormcxx {
         sql_error execute(const std::string& sql_string) override;
 
         sql_error execute() override;
+        sql_error reset() override;
 
     private:
         std::unique_ptr<sql_stmt_base> pImpl;
 
     };
 
-	class Database {
+    class Driver {
+        public:
+        enum class BackendType {
+            SQLITE,
+        //    ODBC,
+        //    MARIA_DB,
+        //    POSTGRESQL
+        };
+
+        static Driver* instance(BackendType backend);
+
+        typedef std::map<std::type_info,std::string> type_map;
+        virtual type_map typemap()=0;
+    };
+
+    class DatabaseImpl {
     public:
         enum class Error {
             OK,
             NO_DB_DRIVER,
             ERROR_NOT_FOUND
         };
+        virtual ~DatabaseImpl() = default;
+
+        virtual Error close()=0;
+
+        virtual expected<sql_stmt,sql_error> query(const std::string& sql_string)=0;
+    };
+	class Database: public DatabaseImpl {
+    public:
 
         enum class BackendType {
             SQLITE,
@@ -101,25 +127,23 @@ namespace ormcxx {
         };
 
 
-	    explicit Database(Database* pImpl_);
+	    explicit Database(DatabaseImpl* pImpl_);
 	    Database(Database&&) = default;
 	    Database(const Database&) = delete;
-	    virtual ~Database() = default;
 
 	    Database& operator=(Database&&) = default;
 	    Database& operator=(const Database&) = delete;
 
         static expected<Database,Error> open(BackendType backendType, const std::string& connInfo);
+	    Error close() override;
 
-        virtual Error close();
 
-        virtual expected<sql_stmt,sql_error> query(const std::string& sql_string);
-        expected<sql_result*,Error> execute(const std::string& sql_string);
+        expected<sql_stmt,sql_error> query(const std::string& sql_string) override;
     protected:
 	    Database()=default;
 
 	private:
-	    std::unique_ptr<Database> pImpl;
+	    std::unique_ptr<DatabaseImpl> pImpl;
     };
 } // ormcxx
 

@@ -17,20 +17,24 @@ namespace ormcxx {
     return pImpl->execute();
   }
 
+  sql_error sql_stmt::reset() {
+    return pImpl->reset();
+  }
+
   sql_error sql_stmt::execute(const std::string &sql_string) {
     return pImpl->execute(sql_string);
   }
 
 
   sql_error sql_bindings::bind_text(size_t index, const std::string &text) {
-    return bind_text(index, text.data(), text.length());
+    return bind_text(index, text.c_str(), text.length());
   }
   const sql_result& sql_stmt::result() const {
     return pImpl->result();
   }
 
 
-  Database::Database(Database *pImpl_)
+  Database::Database(DatabaseImpl *pImpl_)
     : pImpl(pImpl_) {
   }
 
@@ -42,7 +46,7 @@ namespace ormcxx {
           if (!db) {
             return make_unexpected(Error::ERROR_NOT_FOUND);
           } else {
-            return Database(*db);
+            return db;
           }
         }
         break;
@@ -58,9 +62,5 @@ namespace ormcxx {
 
   expected<sql_stmt, sql_error> Database::query(const std::string &sql_string) {
     return pImpl->query(sql_string);
-  }
-
-  expected<sql_result *, Database::Error> Database::execute(const std::string &sql_string) {
-    return pImpl->execute(sql_string);
   }
 }
