@@ -68,6 +68,7 @@ namespace ormcxx {
     };
 
     struct sql_stmt: public sql_stmt_base {
+        ~sql_stmt() override = default;
 
         explicit sql_stmt(sql_stmt_base* pImpl_);
         sql_stmt(sql_stmt&&) = default;
