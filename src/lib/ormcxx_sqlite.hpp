@@ -18,7 +18,7 @@ namespace ormcxx {
         sql_error prepare(const std::string &sql_string) override;
 
         sql_bindings& bindings() override { return *this; }
-        sql_result& result() { return *this; }
+        sql_result& result() override { return *this; }
         const sql_result & result() const override { return *this; }
 
         sql_error execute() override;
@@ -32,7 +32,7 @@ namespace ormcxx {
 
         const char * parameter_name(size_t index) override;
 
-        sql_error bind_blob(size_t index, const void *, int n) override;
+        sql_error bind_blob(size_t index, const void *, size_t n) override;
 
         sql_error bind_double(size_t index, double) override;
 
@@ -42,9 +42,9 @@ namespace ormcxx {
 
         sql_error bind_null(size_t) override;
 
-        sql_error bind_text(size_t index, const char *, int) override;
+        sql_error bind_text(size_t index, const char *, size_t) override;
 
-        sql_error bind_text16(size_t index, const void *, int) override;
+        sql_error bind_text16(size_t index, const void *, size_t len) override;
 
 // implementation of sql_result_base interface
         size_t column_count() const override;
@@ -68,8 +68,7 @@ namespace ormcxx {
         int64_t last_inserted_id() const override;
 
 
-        bool next_row() const override;
-
+        bool next_row() override;
 
         friend class Sqlite3Db;
         sqlite3* db_;
