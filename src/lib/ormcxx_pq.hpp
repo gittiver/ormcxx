@@ -11,11 +11,13 @@ namespace ormcxx {
   private:
     friend class PostgresDb;
     pg_conn *db_;
-    const char *stmt;
+    const char *stmt{nullptr};
+    std::string stmtName{};
+    std::vector<const char*> parameter_values;
     int prepare_rc;
     int exec_rc_;
-    pg_result *res;
-    pg_result *res_describe_prepared;
+    pg_result *res{nullptr};
+    pg_result *res_describe_prepared{nullptr};
     size_t row{0};
   public:
     PostgresStmt(pg_conn *db);

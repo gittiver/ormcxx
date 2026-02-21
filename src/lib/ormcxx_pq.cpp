@@ -55,7 +55,8 @@ namespace ormcxx {
 
 
   sql_error PostgresStmt::prepare(const std::string &sql_string) {
-    res = PQprepare(db_,"stmt",sql_string.c_str(),0,nullptr);
+    this->stmtName = sql_string;
+    res = PQprepare(db_,this->stmtName.c_str(),sql_string.c_str(),0,nullptr);
     prepare_rc = PQresultStatus(res);
 
     switch (prepare_rc) {
@@ -74,7 +75,13 @@ namespace ormcxx {
     int lengths[n]={};
     int formats[n]={};
     PQclear(res);
-    res = PQexecPrepared(db_,"stmt",n,values,lengths,formats,1);
+    res = PQexecPrepared(db_,
+      this->stmtName.c_str(),
+      this->parameter_values.size(),
+      this->parameter_values.data(),
+      lengths,
+      formats,
+      1);
 
     exec_rc_ = PQresultStatus(res);
 
@@ -170,7 +177,7 @@ namespace ormcxx {
   bool PostgresStmt::next_row()  {
     char *pszTuples = PQcmdTuples(res);
     long long tuples = atoll(pszTuples);
-    if (row < tuples - 1) {
+    if (row < tuples) {
       ++row;
       return true;
     } else
@@ -192,10 +199,22 @@ namespace ormcxx {
   }
 
   sql_error PostgresStmt::bind_blob(size_t index, const void *pBlob, size_t n) {
+    if (index>this->parameter_values.size()) {
+      this->parameter_values.insert(this->parameter_values.begin()+index,(const char*)pBlob);
+    }
+    else {
+      this->parameter_values[index] = (const char*) pBlob;
+    }
     return sql_error::NOK;
   }
 
   sql_error PostgresStmt::bind_double(size_t index, double value) {
+    if (index>this->parameter_values.size()) {
+      this->parameter_values.insert(this->parameter_values.begin()+index, std::to_string(value).c_str());
+    }
+    else {
+      this->parameter_values[index] = std::to_string(value).c_str();
+    }
     return sql_error::NOK;
   }
 
