@@ -83,7 +83,7 @@ TEST_CASE("sql_config_table_map") {
 
 
 TEST_CASE("sql_config_driver_select") {
-  struct C {
+struct C {
     int id;
     std::string name;
   };

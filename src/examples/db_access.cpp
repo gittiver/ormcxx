@@ -56,8 +56,10 @@ int main() {
       error = query->execute();
       for (auto i = 0; i < query->result().column_count(); i++) {
         std::string name= query->result().column_name(i);
-        std::cout << name << std::endl;
+        std::cout << name << '|';
       }
+      std::cout << std::endl;
+
       if (error!=ormcxx::sql_error::OK) {
          std::cout << (int)error <<endl;
       }
