@@ -8,16 +8,26 @@ namespace ormcxx {
   class PostgresStmt : public sql_stmt_base,
                        private sql_bindings,
                        private sql_result {
+  public:
+    struct Params {
+      std::vector<const char*> values;
+      std::vector<int> lengths;
+      std::vector<int> formats;
+
+      void bind(size_t index, const char *value, int length, int format=0);
+      int size() const;
+    };
   private:
     friend class PostgresDb;
     pg_conn *db_;
     const char *stmt{nullptr};
     std::string stmtName{};
-    std::vector<const char*> parameter_values;
+    Params parameters;
     int prepare_rc;
     int exec_rc_;
     pg_result *res{nullptr};
     pg_result *res_describe_prepared{nullptr};
+    long long tuples;
     size_t row{0};
   public:
     PostgresStmt(pg_conn *db);
@@ -77,7 +87,7 @@ namespace ormcxx {
 
     const void *column_text16(size_t iCol) const override;
 
-    int column_bytes(size_t iCol) const override;
+    bool has_next_row() const override;
 
     bool next_row() override;
   };

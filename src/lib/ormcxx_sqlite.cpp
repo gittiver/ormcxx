@@ -129,17 +129,19 @@ namespace ormcxx {
     return sqlite3_column_text16(stmt, iCol);
   }
 
-  int Sqlite3Stmt::column_bytes(size_t iCol)  const{
-    return sqlite3_column_bytes(stmt, iCol);
-  }
-
   int64_t Sqlite3Stmt::last_inserted_id() const {
     return sqlite3_last_insert_rowid(db_);
   }
 
+  bool Sqlite3Stmt::has_next_row() const {
+    return exec_rc_ == SQLITE_ROW;
+  }
+
 
   bool Sqlite3Stmt::next_row() {
-    return sqlite3_step(stmt) == SQLITE_ROW;
+    bool rval = (exec_rc_ == SQLITE_ROW);
+    exec_rc_ = sqlite3_step(stmt);
+    return rval;
   }
 
 
@@ -150,45 +152,48 @@ namespace ormcxx {
 
 
   size_t Sqlite3Stmt::parameter_index(const char *zName) {
-    return sqlite3_bind_parameter_index(stmt, zName);
+    int index = sqlite3_bind_parameter_index(stmt, zName);
+    if (index == 0)
+      return -1;
+    else return index-1;
   }
 
 
   const char *Sqlite3Stmt::parameter_name(size_t index) {
-    return sqlite3_bind_parameter_name(stmt, index);
+    return sqlite3_bind_parameter_name(stmt, index+1);
   }
 
 
   sql_error Sqlite3Stmt::bind_blob(size_t index, const void *pBlob, size_t n) {
-    return status2error(sqlite3_bind_blob(stmt, index, pBlob, n, nullptr));
+    return status2error(sqlite3_bind_blob(stmt, index+1, pBlob, n, nullptr));
   }
 
 
   sql_error Sqlite3Stmt::bind_double(size_t index, double value) {
-    return status2error(sqlite3_bind_double(stmt, index, value));
+    return status2error(sqlite3_bind_double(stmt, index+1, value));
   }
 
 
   sql_error Sqlite3Stmt::bind_int(size_t index, int value) {
-    return status2error(sqlite3_bind_int(stmt, index, value));
+    return status2error(sqlite3_bind_int(stmt, index+1, value));
   }
 
 
   sql_error Sqlite3Stmt::bind_int64(size_t index, int64_t value) {
-    return status2error(sqlite3_bind_int64(stmt, index, value));
+    return status2error(sqlite3_bind_int64(stmt, index+1, value));
   }
 
 
   sql_error Sqlite3Stmt::bind_null(size_t index) {
-    return status2error(sqlite3_bind_null(stmt, index));
+    return status2error(sqlite3_bind_null(stmt, index+1));
   }
 
   sql_error Sqlite3Stmt::bind_text(size_t index, const char *zText, size_t n) {
-    return status2error(sqlite3_bind_text(stmt, index, zText, n, SQLITE_TRANSIENT));
+    return status2error(sqlite3_bind_text(stmt, index+1, zText, n, SQLITE_TRANSIENT));
   }
 
   sql_error Sqlite3Stmt::bind_text16(size_t index, const void *zText16, size_t len) {
-    return status2error(sqlite3_bind_text16(stmt, index, zText16, len, nullptr));
+    return status2error(sqlite3_bind_text16(stmt, index+1, zText16, len, nullptr));
   }
 
   sql_error Sqlite3Stmt::reset() {

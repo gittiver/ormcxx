@@ -30,7 +30,7 @@ namespace ormcxx {
         virtual sql_error bind_double(size_t index, double)=0;
         virtual sql_error bind_int(size_t index, int)=0;
         virtual sql_error bind_int64(size_t index, int64_t)=0;
-        virtual sql_error bind_null(size_t)=0;
+        virtual sql_error bind_null(size_t index)=0;
         virtual sql_error bind_text(size_t index, const char* pszText, size_t pszText_Len)=0;
         virtual sql_error bind_text16(size_t index, const void*, size_t len)=0;
         virtual sql_error bind_text(size_t index,const std::string&);
@@ -48,9 +48,9 @@ namespace ormcxx {
         virtual int64_t column_int64(size_t iCol) const = 0;
         virtual const unsigned char* column_text(size_t iCol) const = 0;
         virtual const void* column_text16(size_t iCol) const = 0;
-        virtual int column_bytes(size_t iCol) const = 0;
         // int sqlite3_column_type(sqlite3_stmt*, size_t iCol);bool next_row();
         virtual int64_t last_inserted_id() const  = 0 ;
+        virtual bool has_next_row() const = 0;
         virtual bool next_row() = 0;
     };
 

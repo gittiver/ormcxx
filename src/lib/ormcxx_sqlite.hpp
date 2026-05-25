@@ -63,11 +63,9 @@ namespace ormcxx {
 
         const void * column_text16(size_t iCol) const override;
 
-        int column_bytes(size_t iCol) const override;
-
         int64_t last_inserted_id() const override;
 
-
+        bool has_next_row() const override;
         bool next_row() override;
 
         friend class Sqlite3Db;
@@ -75,6 +73,7 @@ namespace ormcxx {
         sqlite3_stmt* stmt;
         int prepare_rc;
         int exec_rc_;
+        int next_row_;
     };
 
     class Sqlite3Db: public DatabaseImpl {
