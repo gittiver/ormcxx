@@ -75,7 +75,7 @@ namespace ormcxx {
     ormcxx::sql_error error = ormcxx::sql_error::NOK;
     auto query = db->query(ormcxx::sql_config<C>::table().update_by_id());
     if (query) {
-      size_t i = 1;
+      size_t i = 0;
 
       for (const auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
         auto col = ormcxx::sql_config<C>::table().columns[mapped_field->column()];
