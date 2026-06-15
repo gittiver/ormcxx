@@ -47,7 +47,7 @@ namespace ormcxx {
         {
           auto db = Sqlite3Db::open(connInfo);
           if (!db) {
-            return make_unexpected(Error::ERROR_NOT_FOUND);
+            return make_unexpected(Error::ERROR_DB_NOT_FOUND);
           } else {
             return db;
           }
@@ -57,7 +57,7 @@ namespace ormcxx {
         {
         auto db = PostgresDb::open(connInfo);
         if (!db) {
-          return make_unexpected(Error::ERROR_NOT_FOUND);
+          return make_unexpected(Error::ERROR_DB_NOT_FOUND);
         } else {
           return Database(*db);
         }

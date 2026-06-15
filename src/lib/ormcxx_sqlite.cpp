@@ -21,7 +21,7 @@ namespace ormcxx {
     switch (r) {
       case SQLITE_OK: { Database dbb(db); return dbb; }
       default: delete db;
-        return tl::make_unexpected(Database::Error::ERROR_NOT_FOUND);
+        return tl::make_unexpected(Database::Error::ERROR_DB_NOT_FOUND);
     }
   }
 

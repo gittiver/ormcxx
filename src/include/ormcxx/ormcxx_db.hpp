@@ -109,7 +109,7 @@ namespace ormcxx {
         enum class Error {
             OK,
             NO_DB_DRIVER,
-            ERROR_NOT_FOUND
+            ERROR_DB_NOT_FOUND
         };
         virtual ~DatabaseImpl() = default;
 

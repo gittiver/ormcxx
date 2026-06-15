@@ -33,7 +33,9 @@ TEST_CASE("sql_query_and_execute") {
         if (!db) {
             FAIL("can not open connection:"+ std::to_string((int)c.backend_type)+"," + c.connection_string);
         } else {
-            auto query = db->query(
+            auto query = db->query("DROP TABLE IF EXISTS contacts;");
+
+            query = db->query(
                 "CREATE TABLE IF NOT EXISTS contacts ( "
                 "contact_id INTEGER PRIMARY KEY,"
                 "first_name TEXT NOT NULL,"

@@ -32,7 +32,7 @@ namespace ormcxx {
       case CONNECTION_BAD:
       default:
         PQfinish(conn);
-        return make_unexpected(Database::Error::ERROR_NOT_FOUND);
+        return make_unexpected(Database::Error::ERROR_DB_NOT_FOUND);
     }
   }
 
