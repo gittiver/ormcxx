@@ -80,6 +80,12 @@ target_link_libraries(db_access
   ${PROJECT_NAME} ${PROJECT_NAME}_pq
 )
 
+add_executable(db_orm src/examples/db_orm.cpp)
+target_link_libraries(db_orm
+        PRIVATE
+        ${PROJECT_NAME} ${PROJECT_NAME}_pq
+)
+
 include(CTest)
 if(${ORMCXX_ENABLE_TESTS})
 
