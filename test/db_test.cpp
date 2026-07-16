@@ -72,8 +72,10 @@ TEST_CASE("sql_query_bindings") {
                  "email TEXT NOT NULL,"
                  "phone TEXT NOT NULL"
                  ");";
+            auto query = db->query("DROP TABLE IF EXISTS contacts;");
+            query->execute();
 
-            auto query = db->query( CREATE_TABLE_QUERY);
+            query = db->query( CREATE_TABLE_QUERY);
             query->execute();
 
             query = db->query("DELETE from contacts;");
