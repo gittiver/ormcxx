@@ -35,16 +35,18 @@ namespace ormcxx {
   template<class C>
   std::vector<C> data_source<C>::select() {
     std::vector<C> result;
-    auto query_result = db->query(ormcxx::sql_config<C>::select_all());
-    if (query_result) {
-      while (query_result->result().next_row()) {
+    auto query = db->query(ormcxx::sql_config<C>::select_all());
+    auto query_result = query->execute();
+    if (query_result==ormcxx::sql_error::OK) {
+      while (query->result().has_next_row()) {
         C c;
         for (auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
           // cout << mapped_field->column() << endl;
-          mapped_field->readFromResult(query_result->result(), &c);
+          mapped_field->readFromResult(query->result(), &c);
         }
         // TBD sql_config map
         result.push_back(c);
+        query->result().next_row();
       };
     }
     return result;
@@ -55,7 +57,7 @@ namespace ormcxx {
     ormcxx::sql_error error = ormcxx::sql_error::NOK;
     auto query = db->query(ormcxx::sql_config<C>::table().delete_by_id());
     if (query) {
-      size_t i = 1;
+      size_t i = 0;
       for (const auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
         if (ormcxx::sql_config<C>::table().columns[mapped_field->column()].is_primary ==
             ormcxx::ePRIMARY_KEY::PRIMARY_KEY) {
@@ -73,7 +75,7 @@ namespace ormcxx {
     ormcxx::sql_error error = ormcxx::sql_error::NOK;
     auto query = db->query(ormcxx::sql_config<C>::table().update_by_id());
     if (query) {
-      size_t i = 1;
+      size_t i = 0;
 
       for (const auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
         auto col = ormcxx::sql_config<C>::table().columns[mapped_field->column()];
@@ -100,7 +102,7 @@ namespace ormcxx {
     if (query) {
       for (const auto mapped_field: ormcxx::sql_config<C>::field_mapping()) {
         // cout << mapped_field->column() << endl;
-        mapped_field->writeToBindings(query->bindings(), &c, mapped_field->column() + 1);
+        mapped_field->writeToBindings(query->bindings(), &c, mapped_field->column());
       }
       error = query->execute();
       query->reset();

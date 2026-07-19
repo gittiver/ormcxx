@@ -3,8 +3,6 @@
 #include "include/ormcxx/ormcxx_sql_config.hpp"
 
 using ormcxx::sql_table_definition;
-using ormcxx::sql_column_definition;
-using ormcxx::sql_type;
 using ormcxx::sql_config;
 using std::cout;
 using std::endl;

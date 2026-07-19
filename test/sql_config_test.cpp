@@ -83,7 +83,7 @@ TEST_CASE("sql_config_table_map") {
 
 
 TEST_CASE("sql_config_driver_select") {
-  struct C {
+struct C {
     int id;
     std::string name;
   };
@@ -157,7 +157,7 @@ TEST_CASE("sql_config_insert") {
   sql_config<C>::setPrimaryField("id", &C::id);
   sql_config<C>::setField("name", &C::name);
 
-  auto db = Database::open(Database::BackendType::SQLITE, ":memory:");
+  auto db = Database::open(Database::BackendType::SQLITE, "sql_config.db");
 
   db->query("DROP table IF EXISTS C;")->execute();
   auto ddl = sql_config<C>::to_ddl();
